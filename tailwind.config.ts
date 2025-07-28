@@ -52,6 +52,16 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				golf: {
+					fairway: 'hsl(var(--golf-fairway))',
+					rough: 'hsl(var(--golf-rough))',
+					sand: 'hsl(var(--golf-sand))',
+					water: 'hsl(var(--golf-water))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
