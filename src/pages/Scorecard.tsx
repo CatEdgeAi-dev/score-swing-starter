@@ -1,17 +1,21 @@
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { HoleInput } from '@/components/scorecard/HoleInput';
 import { StatSummary } from '@/components/scorecard/StatSummary';
 import { ScorecardProvider, useScorecardContext } from '@/components/scorecard/ScorecardContext';
+import { TopBar } from '@/components/navigation/TopBar';
+import { BottomTabs } from '@/components/navigation/BottomTabs';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 const ScorecardContent = () => {
   const { holes, getTotalScore, getAveragePutts, getGIRPercentage } = useScorecardContext();
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto p-4 space-y-4">
+    <div className="min-h-screen bg-background flex flex-col">
+      <TopBar title="Golf Scorecard" />
+      
+      <div className="flex-1 max-w-md mx-auto p-4 space-y-4 pb-20">
         <Card>
           <CardHeader>
             <CardTitle className="text-center text-primary">Golf Scorecard</CardTitle>
@@ -42,15 +46,19 @@ const ScorecardContent = () => {
           </Button>
         </div>
       </div>
+      
+      <BottomTabs />
     </div>
   );
 };
 
 const Scorecard = () => {
   return (
-    <ScorecardProvider>
-      <ScorecardContent />
-    </ScorecardProvider>
+    <ProtectedRoute>
+      <ScorecardProvider>
+        <ScorecardContent />
+      </ScorecardProvider>
+    </ProtectedRoute>
   );
 };
 
