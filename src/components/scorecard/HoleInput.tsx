@@ -21,8 +21,20 @@ export const HoleInput: React.FC<HoleInputProps> = ({ holeNumber }) => {
     updateHole(holeNumber, { strokes: newStrokes });
   };
 
+  const handleStrokesInput = (value: string) => {
+    const numValue = parseInt(value) || 0;
+    const newStrokes = Math.max(0, Math.min(20, numValue)); // Cap at 20 strokes
+    updateHole(holeNumber, { strokes: newStrokes });
+  };
+
   const handlePuttsChange = (change: number) => {
     const newPutts = Math.max(0, hole.putts + change);
+    updateHole(holeNumber, { putts: newPutts });
+  };
+
+  const handlePuttsInput = (value: string) => {
+    const numValue = parseInt(value) || 0;
+    const newPutts = Math.max(0, Math.min(10, numValue)); // Cap at 10 putts
     updateHole(holeNumber, { putts: newPutts });
   };
 
@@ -82,9 +94,15 @@ export const HoleInput: React.FC<HoleInputProps> = ({ holeNumber }) => {
               >
                 -
               </Button>
-              <div className="w-12 text-center font-bold text-lg">
-                {hole.strokes || '-'}
-              </div>
+              <Input
+                type="number"
+                min="0"
+                max="20"
+                value={hole.strokes || ''}
+                onChange={(e) => handleStrokesInput(e.target.value)}
+                className="w-16 h-8 text-center font-bold text-lg p-1"
+                placeholder="0"
+              />
               <Button
                 variant="outline"
                 size="sm"
@@ -113,9 +131,15 @@ export const HoleInput: React.FC<HoleInputProps> = ({ holeNumber }) => {
               >
                 -
               </Button>
-              <div className="w-12 text-center font-bold text-lg">
-                {hole.putts || '-'}
-              </div>
+              <Input
+                type="number"
+                min="0"
+                max="10"
+                value={hole.putts || ''}
+                onChange={(e) => handlePuttsInput(e.target.value)}
+                className="w-16 h-8 text-center font-bold text-lg p-1"
+                placeholder="0"
+              />
               <Button
                 variant="outline"
                 size="sm"
