@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { FlightProvider } from "./contexts/FlightContext";
+import { RouteLoadingWrapper } from "./components/routing/RouteLoadingWrapper";
+import { RouteGuard } from "./components/routing/RouteGuard";
+import { Breadcrumbs } from "./components/navigation/Breadcrumbs";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import RoundSelection from "./pages/RoundSelection";
@@ -24,16 +27,51 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <Breadcrumbs />
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/rounds" element={<RoundSelection />} />
-              <Route path="/scorecard" element={<Scorecard />} />
-              <Route path="/history" element={<RoundHistory />} />
-              <Route path="/stats" element={<Stats />} />
-              <Route path="/profile" element={<Profile />} />
+              <Route path="/" element={
+                <RouteLoadingWrapper>
+                  <Index />
+                </RouteLoadingWrapper>
+              } />
+              <Route path="/login" element={
+                <RouteLoadingWrapper>
+                  <Login />
+                </RouteLoadingWrapper>
+              } />
+              <Route path="/rounds" element={
+                <RouteLoadingWrapper>
+                  <RoundSelection />
+                </RouteLoadingWrapper>
+              } />
+              <Route path="/scorecard" element={
+                <RouteLoadingWrapper>
+                  <RouteGuard requiresRoundSetup={true}>
+                    <Scorecard />
+                  </RouteGuard>
+                </RouteLoadingWrapper>
+              } />
+              <Route path="/history" element={
+                <RouteLoadingWrapper>
+                  <RoundHistory />
+                </RouteLoadingWrapper>
+              } />
+              <Route path="/stats" element={
+                <RouteLoadingWrapper>
+                  <Stats />
+                </RouteLoadingWrapper>
+              } />
+              <Route path="/profile" element={
+                <RouteLoadingWrapper>
+                  <Profile />
+                </RouteLoadingWrapper>
+              } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={
+                <RouteLoadingWrapper>
+                  <NotFound />
+                </RouteLoadingWrapper>
+              } />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>

@@ -25,6 +25,8 @@ const RoundSelection = () => {
   const { createFlight } = useFlightContext();
 
   const handleSoloRound = () => {
+    // Set flag to indicate coming from rounds page
+    sessionStorage.setItem('fromRounds', 'true');
     navigate('/scorecard');
   };
 
@@ -34,6 +36,8 @@ const RoundSelection = () => {
     players: any[];
   }) => {
     createFlight(flightData);
+    // Set flag to indicate coming from rounds page
+    sessionStorage.setItem('fromRounds', 'true');
     navigate('/scorecard');
   };
 
