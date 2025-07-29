@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -20,9 +21,10 @@ import { useSwipeGestures } from '@/hooks/useSwipeGestures';
 import { FlightPlayerSelector } from '@/components/flight/FlightPlayerSelector';
 import { useFlightContext } from '@/contexts/FlightContext';
 import { useToast } from '@/hooks/use-toast';
-import { Share2 } from 'lucide-react';
+import { Share2, ArrowLeft, Plus } from 'lucide-react';
 
 const ScorecardContent = () => {
+  const navigate = useNavigate();
   const { holes, updateHole, resetScorecard, getTotalScore, getAveragePutts, getGIRPercentage } = useScorecardContext();
   const { shareRound } = useRounds();
   const { toast } = useToast();
@@ -40,6 +42,7 @@ const ScorecardContent = () => {
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetType, setResetType] = useState<'hole' | 'round'>('hole');
   const [showNewRoundDialog, setShowNewRoundDialog] = useState(false);
+  const [showBackDialog, setShowBackDialog] = useState(false);
 
   // Current date
   const currentDate = isFlightMode 
@@ -135,6 +138,24 @@ const ScorecardContent = () => {
 
   const handleNewRound = () => {
     setShowNewRoundDialog(true);
+  };
+
+  const handleBackNavigation = () => {
+    // Check if there's any data in the scorecard
+    const hasData = Object.values(holes).some(hole => 
+      hole.strokes > 0 || hole.putts > 0 || hole.notes.trim() !== ''
+    );
+    
+    if (hasData) {
+      setShowBackDialog(true);
+    } else {
+      navigate('/rounds');
+    }
+  };
+
+  const confirmBackNavigation = () => {
+    setShowBackDialog(false);
+    navigate('/rounds');
   };
 
   const confirmNewRound = () => {
@@ -255,7 +276,30 @@ Shared from Golf Scorecard App`;
 
   return (
     <div className="min-h-screen bg-background flex flex-col" {...swipeHandlers}>
-      <TopBar title="Golf Scorecard" />
+      {/* Custom TopBar with back navigation */}
+      <div className="bg-background border-b border-border px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBackNavigation}
+            className="p-1"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-semibold text-foreground">Golf Scorecard</h1>
+        </div>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleNewRound}
+          className="flex items-center space-x-1"
+        >
+          <Plus className="h-4 w-4" />
+          <span>New Round</span>
+        </Button>
+      </div>
       
         <div className="flex-1 max-w-md mx-auto p-4 space-y-4 pb-24">
           {/* Flight Player Selector - only show in flight mode */}
@@ -380,7 +424,17 @@ Shared from Golf Scorecard App`;
         variant="destructive"
         onConfirm={confirmNewRound}
       />
-      
+
+      {/* Back Navigation Confirmation Dialog */}
+      <ConfirmationDialog
+        open={showBackDialog}
+        onOpenChange={setShowBackDialog}
+        title="Leave Scorecard?"
+        description="You have unsaved data. Are you sure you want to leave? Your current round data will be lost."
+        confirmLabel="Leave"
+        variant="destructive"
+        onConfirm={confirmBackNavigation}
+      />
       <BottomTabs />
     </div>
   );

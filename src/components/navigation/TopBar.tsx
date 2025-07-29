@@ -23,8 +23,7 @@ export const TopBar: React.FC<TopBarProps> = ({ title }) => {
   };
 
   const handleSettingsClick = () => {
-    // Placeholder for settings - could be a modal or new page
-    console.log('Settings clicked - placeholder');
+    navigate('/settings');
   };
 
   return (

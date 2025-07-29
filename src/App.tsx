@@ -18,6 +18,7 @@ import Scorecard from "./pages/Scorecard";
 import RoundHistory from "./pages/RoundHistory";
 import Stats from "./pages/Stats";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,9 +32,10 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Breadcrumbs />
-              <ContextualHeader />
-              <QuickActions />
+              <div className="min-h-screen bg-background">
+                <Breadcrumbs />
+                <ContextualHeader />
+                <QuickActions />
               <Routes>
               <Route path="/" element={
                 <RouteLoadingWrapper>
@@ -72,13 +74,19 @@ const App = () => (
                   <Profile />
                 </RouteLoadingWrapper>
               } />
+              <Route path="/settings" element={
+                <RouteLoadingWrapper>
+                  <Settings />
+                </RouteLoadingWrapper>
+              } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={
                 <RouteLoadingWrapper>
                   <NotFound />
                 </RouteLoadingWrapper>
               } />
-            </Routes>
+                </Routes>
+              </div>
           </BrowserRouter>
         </TooltipProvider>
       </ScorecardProvider>
