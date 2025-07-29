@@ -34,20 +34,34 @@ export const useRounds = () => {
     console.log('Loading rounds for user:', user.id);
     setLoading(true);
     try {
+      // First, get the user's profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      // Then get the rounds
       const { data: roundsData, error } = await supabase
         .from('rounds')
         .select(`
           *,
           holes(*),
-          flights(name),
-          profiles(display_name)
+          flights(name)
         `)
         .eq('user_id', user.id)
         .order('date_played', { ascending: false });
 
       if (error) throw error;
       console.log('Rounds loaded successfully:', roundsData?.length || 0);
-      setRounds(roundsData || []);
+      
+      // Add profile information to each round
+      const roundsWithProfile = roundsData?.map(round => ({
+        ...round,
+        profiles: profile
+      })) || [];
+      
+      setRounds(roundsWithProfile);
     } catch (error: any) {
       console.error('Error fetching rounds:', error);
       // Only show toast for real errors, not network issues during development
@@ -206,19 +220,33 @@ Shared from Golf Scorecard App`;
     if (!user) return [];
 
     try {
+      // First, get the user's profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      // Then get the rounds
       const { data: rounds, error } = await supabase
         .from('rounds')
         .select(`
           *,
           holes(*),
-          flights(name),
-          profiles(display_name)
+          flights(name)
         `)
         .eq('user_id', user.id)
         .order('date_played', { ascending: false });
 
       if (error) throw error;
-      return rounds || [];
+      
+      // Add profile information to each round
+      const roundsWithProfile = rounds?.map(round => ({
+        ...round,
+        profiles: profile
+      })) || [];
+      
+      return roundsWithProfile;
     } catch (error: any) {
       console.error('Error fetching rounds:', error);
       toast({
