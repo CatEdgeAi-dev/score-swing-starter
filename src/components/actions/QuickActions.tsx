@@ -29,7 +29,18 @@ export const QuickActions: React.FC = () => {
   const [pendingAction, setPendingAction] = useState<() => void>(() => {});
   
   const { isFlightMode, currentFlight, leaveFlight } = useFlightContext();
-  const { holes, resetScorecard } = useScorecardContext();
+  
+  // Safely get scorecard context - it might not be available on all pages
+  let holes: Record<number, any> = {};
+  let resetScorecard = () => {};
+  
+  try {
+    const scorecardContext = useScorecardContext();
+    holes = scorecardContext.holes;
+    resetScorecard = scorecardContext.resetScorecard;
+  } catch (error) {
+    // Context not available on this page - use defaults
+  }
 
   // Don't show on login or loading pages
   if (location.pathname === '/login' || location.pathname === '/') {
