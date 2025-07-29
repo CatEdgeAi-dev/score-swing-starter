@@ -17,6 +17,8 @@ import { BottomTabs } from '@/components/navigation/BottomTabs';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useRounds } from '@/hooks/useRounds';
 import { useSwipeGestures } from '@/hooks/useSwipeGestures';
+import { FlightPlayerSelector } from '@/components/flight/FlightPlayerSelector';
+import { useFlightContext } from '@/contexts/FlightContext';
 import { useToast } from '@/hooks/use-toast';
 import { Share2 } from 'lucide-react';
 
@@ -24,22 +26,34 @@ const ScorecardContent = () => {
   const { holes, updateHole, resetScorecard, getTotalScore, getAveragePutts, getGIRPercentage } = useScorecardContext();
   const { shareRound } = useRounds();
   const { toast } = useToast();
+  const { currentFlight, currentPlayer, switchToPlayer, isFlightMode } = useFlightContext();
   
   // Enhanced state management
-  const [courseName, setCourseName] = useState('Golf Course');
-  const [weather, setWeather] = useState('sunny');
+  const [courseName, setCourseName] = useState(
+    isFlightMode ? (currentFlight?.courseName || 'Golf Course') : 'Golf Course'
+  );
+  const [weather, setWeather] = useState(
+    isFlightMode ? (currentFlight?.weather || 'sunny') : 'sunny'
+  );
   const [currentHole, setCurrentHole] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetType, setResetType] = useState<'hole' | 'round'>('hole');
 
   // Current date
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
+  const currentDate = isFlightMode 
+    ? (currentFlight?.datePlayedInfo || new Date().toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }))
+    : new Date().toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
 
   // Find holes with data for navigation indicators
   const holesWithData = useMemo(() => {
@@ -167,7 +181,7 @@ const ScorecardContent = () => {
 ⛳ Course: ${courseName}
 📅 Date: ${currentDate}
 🌤️ Weather: ${weather}
-🏆 Score: ${getTotalScore()} 
+${isFlightMode ? `👥 Flight: ${currentFlight?.name}\n🏌️ Player: ${currentPlayer?.name}\n` : ''}🏆 Score: ${getTotalScore()} 
 🏀 Avg Putts: ${getAveragePutts().toFixed(1)}
 🎯 GIR: ${getGIRPercentage().toFixed(0)}%
 
@@ -226,8 +240,19 @@ Shared from Golf Scorecard App`;
     <div className="min-h-screen bg-background flex flex-col" {...swipeHandlers}>
       <TopBar title="Golf Scorecard" />
       
-      <div className="flex-1 max-w-md mx-auto p-4 space-y-4 pb-32">
-        <EnhancedHeader
+        <div className="flex-1 max-w-md mx-auto p-4 space-y-4 pb-32">
+          {/* Flight Player Selector - only show in flight mode */}
+          {isFlightMode && currentFlight && currentPlayer && (
+            <FlightPlayerSelector
+              players={currentFlight.players}
+              currentPlayer={currentPlayer}
+              onPlayerSwitch={switchToPlayer}
+              flightName={currentFlight.name}
+              className="mb-4"
+            />
+          )}
+
+          <EnhancedHeader
           courseName={courseName}
           date={currentDate}
           weather={weather}
@@ -246,6 +271,18 @@ Shared from Golf Scorecard App`;
           holesWithData={holesWithData}
           className="mb-4"
         />
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center text-primary">
+              {isFlightMode ? `${currentPlayer?.name}'s Scorecard` : 'Golf Scorecard'}
+            </CardTitle>
+            <p className="text-center text-muted-foreground">
+              Hole {currentHole} of 18 • Swipe to navigate
+              {isFlightMode && ` • Flight: ${currentFlight?.name}`}
+            </p>
+          </CardHeader>
+        </Card>
 
         {/* Current Hole Display */}
         <HoleInput holeNumber={currentHole} />

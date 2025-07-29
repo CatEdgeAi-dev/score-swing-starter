@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      flight_players: {
+        Row: {
+          created_at: string
+          flight_id: string
+          guest_name: string | null
+          id: string
+          player_order: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          flight_id: string
+          guest_name?: string | null
+          id?: string
+          player_order?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          flight_id?: string
+          guest_name?: string | null
+          id?: string
+          player_order?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_players_flight_id_fkey"
+            columns: ["flight_id"]
+            isOneToOne: false
+            referencedRelation: "flights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flights: {
+        Row: {
+          course_name: string | null
+          created_at: string
+          created_by: string
+          date_played: string
+          id: string
+          name: string
+          updated_at: string
+          weather: string | null
+        }
+        Insert: {
+          course_name?: string | null
+          created_at?: string
+          created_by: string
+          date_played?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          weather?: string | null
+        }
+        Update: {
+          course_name?: string | null
+          created_at?: string
+          created_by?: string
+          date_played?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          weather?: string | null
+        }
+        Relationships: []
+      }
       holes: {
         Row: {
           created_at: string
@@ -73,8 +141,10 @@ export type Database = {
           created_at: string
           date_played: string
           fairways_hit: number
+          flight_id: string | null
           greens_in_regulation: number
           id: string
+          player_id: string | null
           total_putts: number
           total_score: number
           updated_at: string
@@ -85,8 +155,10 @@ export type Database = {
           created_at?: string
           date_played?: string
           fairways_hit?: number
+          flight_id?: string | null
           greens_in_regulation?: number
           id?: string
+          player_id?: string | null
           total_putts?: number
           total_score?: number
           updated_at?: string
@@ -97,14 +169,31 @@ export type Database = {
           created_at?: string
           date_played?: string
           fairways_hit?: number
+          flight_id?: string | null
           greens_in_regulation?: number
           id?: string
+          player_id?: string | null
           total_putts?: number
           total_score?: number
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rounds_flight_id_fkey"
+            columns: ["flight_id"]
+            isOneToOne: false
+            referencedRelation: "flights"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rounds_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "flight_players"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
