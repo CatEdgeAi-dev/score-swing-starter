@@ -90,9 +90,7 @@ export const useRounds = () => {
 
   const saveRound = async (
     holes: Record<number, HoleData>,
-    courseName?: string,
-    flightId?: string,
-    playerId?: string
+    courseName?: string
   ): Promise<Round | null> => {
     if (!user) {
       toast({
@@ -121,8 +119,6 @@ export const useRounds = () => {
           total_putts: totalPutts,
           fairways_hit: fairwaysHit,
           greens_in_regulation: greensInRegulation,
-          flight_id: flightId || null,
-          player_id: playerId || null,
         })
         .select()
         .maybeSingle();
