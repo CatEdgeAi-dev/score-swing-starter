@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useFlightContext } from '@/contexts/FlightContext';
 
 export interface HoleData {
   strokes: number;
@@ -24,43 +25,77 @@ const ScorecardContext = createContext<ScorecardContextType | undefined>(undefin
 
 const defaultPars = [4, 4, 3, 5, 4, 4, 3, 5, 4, 4, 3, 5, 4, 4, 3, 5, 4, 4];
 
+const createEmptyScorecard = (): Record<number, HoleData> => {
+  const holes: Record<number, HoleData> = {};
+  for (let i = 1; i <= 18; i++) {
+    holes[i] = {
+      strokes: 0,
+      putts: 0,
+      fairwayHit: false,
+      greenInRegulation: false,
+      upAndDown: false,
+      notes: '',
+      par: defaultPars[i - 1],
+    };
+  }
+  return holes;
+};
+
 export const ScorecardProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [holes, setHoles] = useState<Record<number, HoleData>>(() => {
-    const initialHoles: Record<number, HoleData> = {};
-    for (let i = 1; i <= 18; i++) {
-      initialHoles[i] = {
-        strokes: 0,
-        putts: 0,
-        fairwayHit: false,
-        greenInRegulation: false,
-        upAndDown: false,
-        notes: '',
-        par: defaultPars[i - 1],
-      };
-    }
-    return initialHoles;
+  const { currentPlayer, isFlightMode } = useFlightContext();
+  
+  // Store scorecards for each player (or solo play)
+  const [playerScorecards, setPlayerScorecards] = useState<Record<string, Record<number, HoleData>>>(() => {
+    return { 'solo': createEmptyScorecard() };
   });
 
-  const resetScorecard = () => {
-    const initialHoles: Record<number, HoleData> = {};
-    for (let i = 1; i <= 18; i++) {
-      initialHoles[i] = {
-        strokes: 0,
-        putts: 0,
-        fairwayHit: false,
-        greenInRegulation: false,
-        upAndDown: false,
-        notes: '',
-        par: defaultPars[i - 1],
-      };
+  // Current active scorecard
+  const [holes, setHoles] = useState<Record<number, HoleData>>(createEmptyScorecard());
+
+  // Effect to switch between player scorecards
+  useEffect(() => {
+    const playerId = isFlightMode && currentPlayer ? currentPlayer.id : 'solo';
+    
+    // Save current scorecard to the current player
+    const currentPlayerId = Object.keys(playerScorecards).find(id => 
+      JSON.stringify(playerScorecards[id]) === JSON.stringify(holes)
+    );
+    
+    // Load or create scorecard for the new player
+    if (!playerScorecards[playerId]) {
+      setPlayerScorecards(prev => ({
+        ...prev,
+        [playerId]: createEmptyScorecard()
+      }));
+      setHoles(createEmptyScorecard());
+    } else {
+      setHoles(playerScorecards[playerId]);
     }
-    setHoles(initialHoles);
+  }, [currentPlayer, isFlightMode]);
+
+  const resetScorecard = () => {
+    const emptyScorecard = createEmptyScorecard();
+    const playerId = isFlightMode && currentPlayer ? currentPlayer.id : 'solo';
+    
+    setHoles(emptyScorecard);
+    setPlayerScorecards(prev => ({
+      ...prev,
+      [playerId]: emptyScorecard
+    }));
   };
 
   const updateHole = (holeNumber: number, data: Partial<HoleData>) => {
-    setHoles(prev => ({
+    const playerId = isFlightMode && currentPlayer ? currentPlayer.id : 'solo';
+    
+    const updatedHoles = {
+      ...holes,
+      [holeNumber]: { ...holes[holeNumber], ...data }
+    };
+    
+    setHoles(updatedHoles);
+    setPlayerScorecards(prev => ({
       ...prev,
-      [holeNumber]: { ...prev[holeNumber], ...data }
+      [playerId]: updatedHoles
     }));
   };
 
