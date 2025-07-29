@@ -33,7 +33,7 @@ const ScorecardContent = () => {
   
   // Enhanced state management
   const [courseName, setCourseName] = useState(
-    isFlightMode ? (currentFlight?.courseName || 'Golf Course') : 'Golf Course'
+    isFlightMode ? (currentFlight?.courseName || 'Local Golf Course') : 'Local Golf Course'
   );
   const [weather, setWeather] = useState(
     isFlightMode ? (currentFlight?.weather || 'sunny') : 'sunny'
@@ -167,7 +167,7 @@ const ScorecardContent = () => {
   const confirmNewRound = () => {
     resetScorecard();
     setCurrentHole(1);
-    setCourseName('Golf Course');
+    setCourseName('Local Golf Course');
     setWeather('sunny');
     setShowNewRoundDialog(false);
     toast({
@@ -229,7 +229,7 @@ ${isFlightMode ? `👥 Flight: ${currentFlight?.name}\n🏌️ Player: ${current
 🏀 Avg Putts: ${getAveragePutts().toFixed(1)}
 🎯 GIR: ${getGIRPercentage().toFixed(0)}%
 
-Shared from Golf Scorecard App`;
+Shared from Birdie Buddies App`;
 
     try {
       if (navigator.share) {
@@ -293,7 +293,7 @@ Shared from Golf Scorecard App`;
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold text-foreground">Golf Scorecard</h1>
+          <h1 className="text-lg font-semibold text-foreground">Birdie Buddies</h1>
         </div>
         
         <div className="flex items-center space-x-2">

@@ -37,7 +37,7 @@ const getPageTitle = (pathname: string): string => {
     '/stats': 'Statistics',
     '/profile': 'Profile',
   };
-  return titles[pathname] || 'Golf Scorecard';
+  return titles[pathname] || 'Birdie Buddies';
 };
 
 export const RouteLoadingWrapper: React.FC<RouteLoadingWrapperProps> = ({ 

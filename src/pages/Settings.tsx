@@ -166,7 +166,7 @@ const SettingsContent: React.FC = () => {
         {/* App Info */}
         <Card>
           <CardContent className="p-6 text-center text-sm text-muted-foreground">
-            <p>Golf Scorecard App</p>
+            <p>Birdie Buddies App</p>
             <p>Version 1.0.0</p>
             <p className="mt-2">Built with ❤️ for golfers</p>
           </CardContent>

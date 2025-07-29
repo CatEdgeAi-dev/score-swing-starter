@@ -28,7 +28,7 @@ interface OnboardingStep {
 const onboardingSteps: OnboardingStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to Golf Scorecard!',
+    title: 'Welcome to Birdie Buddies!',
     description: 'Your complete golf tracking companion',
     icon: Trophy,
     features: [

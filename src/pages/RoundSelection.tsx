@@ -70,7 +70,7 @@ const RoundSelection = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background flex flex-col">
-        <TopBar title="Golf Scorecard" />
+        <TopBar title="Birdie Buddies" />
         
         <div className="flex-1 max-w-md mx-auto p-4 space-y-6 pb-24">
           {/* Welcome Section */}

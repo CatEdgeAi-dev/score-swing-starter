@@ -43,7 +43,7 @@ ${isFlightMode ? `👥 Flight: ${currentFlight?.name}\n🏌️ Player: ${current
 🏀 Avg Putts: ${getAveragePutts().toFixed(1)}
 🎯 GIR: ${getGIRPercentage().toFixed(0)}%
 
-Shared from Golf Scorecard App`;
+Shared from Birdie Buddies App`;
 
     try {
       if (navigator.share) {

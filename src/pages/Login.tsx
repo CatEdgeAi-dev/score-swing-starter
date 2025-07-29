@@ -133,7 +133,7 @@ const Login = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-2xl font-bold text-primary">Golf Scorecard</CardTitle>
+          <CardTitle className="text-2xl font-bold text-primary">Birdie Buddies</CardTitle>
           <CardDescription>Sign in to track your rounds</CardDescription>
         </CardHeader>
         

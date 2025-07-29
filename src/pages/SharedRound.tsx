@@ -341,7 +341,7 @@ View full details: ${window.location.href}`;
             <div className="space-y-2">
               <h3 className="font-semibold">Track Your Own Rounds</h3>
               <p className="text-sm text-muted-foreground">
-                Join Golf Scorecard to track your games, play with friends, and improve your performance.
+                Join Birdie Buddies to track your games, play with friends, and improve your performance.
               </p>
             </div>
             
