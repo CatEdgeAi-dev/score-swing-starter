@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,10 +19,11 @@ const Login = () => {
   const { signIn, signUp, signInWithGoogle, user } = useAuth();
 
   // Redirect if already logged in
-  if (user) {
-    navigate('/scorecard');
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      navigate('/scorecard');
+    }
+  }, [user, navigate]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
