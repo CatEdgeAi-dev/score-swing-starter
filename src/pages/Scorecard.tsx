@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { HoleInput } from '@/components/scorecard/HoleInput';
+import { SinglePanelInput } from '@/components/scorecard/SinglePanelInput';
 import { StatSummary } from '@/components/scorecard/StatSummary';
 import { useScorecardContext } from '@/components/scorecard/ScorecardContext';
 import { SaveRoundDialog } from '@/components/scorecard/SaveRoundDialog';
@@ -21,7 +22,7 @@ import { useSwipeGestures } from '@/hooks/useSwipeGestures';
 import { FlightPlayerSelector } from '@/components/flight/FlightPlayerSelector';
 import { useFlightContext } from '@/contexts/FlightContext';
 import { useToast } from '@/hooks/use-toast';
-import { Share2, ArrowLeft, Plus } from 'lucide-react';
+import { Share2, ArrowLeft, Plus, Grid3X3, Focus } from 'lucide-react';
 
 const ScorecardContent = () => {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ const ScorecardContent = () => {
   const [resetType, setResetType] = useState<'hole' | 'round'>('hole');
   const [showNewRoundDialog, setShowNewRoundDialog] = useState(false);
   const [showBackDialog, setShowBackDialog] = useState(false);
+  const [inputMode, setInputMode] = useState<'focused' | 'panel'>('focused');
 
   // Current date
   const currentDate = isFlightMode 
@@ -156,6 +158,10 @@ const ScorecardContent = () => {
   const confirmBackNavigation = () => {
     setShowBackDialog(false);
     navigate('/rounds');
+  };
+
+  const toggleInputMode = () => {
+    setInputMode(prev => prev === 'focused' ? 'panel' : 'focused');
   };
 
   const confirmNewRound = () => {
@@ -290,15 +296,36 @@ Shared from Golf Scorecard App`;
           <h1 className="text-lg font-semibold text-foreground">Golf Scorecard</h1>
         </div>
         
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleNewRound}
-          className="flex items-center space-x-1"
-        >
-          <Plus className="h-4 w-4" />
-          <span>New Round</span>
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleInputMode}
+            className="flex items-center space-x-1"
+          >
+            {inputMode === 'focused' ? (
+              <>
+                <Grid3X3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Panel</span>
+              </>
+            ) : (
+              <>
+                <Focus className="h-4 w-4" />
+                <span className="hidden sm:inline">Focus</span>
+              </>
+            )}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNewRound}
+            className="flex items-center space-x-1"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">New Round</span>
+          </Button>
+        </div>
       </div>
       
         <div className="flex-1 max-w-md mx-auto p-4 space-y-4 pb-24">
@@ -324,30 +351,28 @@ Shared from Golf Scorecard App`;
           onNewRound={handleNewRound}
         />
 
-        <AdvancedHoleNavigation
-          currentHole={currentHole}
-          totalHoles={18}
-          onHoleSelect={handleHoleSelect}
-          onPrevious={handlePrevHole}
-          onNext={handleNextHole}
-          holesWithData={holesWithData}
-          className="mb-4"
-        />
+        {/* Conditional rendering based on input mode */}
+        {inputMode === 'focused' ? (
+          <>
+            <AdvancedHoleNavigation
+              currentHole={currentHole}
+              totalHoles={18}
+              onHoleSelect={handleHoleSelect}
+              onPrevious={handlePrevHole}
+              onNext={handleNextHole}
+              holesWithData={holesWithData}
+              className="mb-4"
+            />
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center text-primary">
-              {isFlightMode ? `${currentPlayer?.name}'s Scorecard` : 'Golf Scorecard'}
-            </CardTitle>
-            <p className="text-center text-muted-foreground">
-              Hole {currentHole} of 18 • Swipe to navigate
-              {isFlightMode && ` • Flight: ${currentFlight?.name}`}
-            </p>
-          </CardHeader>
-        </Card>
-
-        {/* Current Hole Display */}
-        <HoleInput holeNumber={currentHole} />
+            {/* Current Hole Display */}
+            <HoleInput holeNumber={currentHole} />
+          </>
+        ) : (
+          /* Single Panel Input Mode */
+          <div className="animate-fade-in">
+            <SinglePanelInput />
+          </div>
+        )}
 
         <Separator className="my-6" />
 
