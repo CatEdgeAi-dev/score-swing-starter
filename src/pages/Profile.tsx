@@ -4,10 +4,14 @@ import { BottomTabs } from '@/components/navigation/BottomTabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, Mail, Calendar, LogOut } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { User, Mail, Calendar, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { FlightManagementPanel } from '@/components/flight/FlightManagementPanel';
+import { useFlightContext } from '@/contexts/FlightContext';
 
 const ProfileContent: React.FC = () => {
   const { user, signOut } = useAuth();
+  const { isFlightMode } = useFlightContext();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -48,9 +52,17 @@ const ProfileContent: React.FC = () => {
           </CardContent>
         </Card>
 
+        {/* Flight Management - only show if in flight mode */}
+        {isFlightMode && (
+          <FlightManagementPanel />
+        )}
+
         <Card>
           <CardHeader>
-            <CardTitle>Settings</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <SettingsIcon className="h-5 w-5" />
+              Settings
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">

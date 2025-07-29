@@ -8,6 +8,8 @@ import { FlightProvider } from "./contexts/FlightContext";
 import { RouteLoadingWrapper } from "./components/routing/RouteLoadingWrapper";
 import { RouteGuard } from "./components/routing/RouteGuard";
 import { Breadcrumbs } from "./components/navigation/Breadcrumbs";
+import { ContextualHeader } from "./components/navigation/ContextualHeader";
+import { QuickActions } from "./components/actions/QuickActions";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import RoundSelection from "./pages/RoundSelection";
@@ -28,6 +30,8 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Breadcrumbs />
+            <ContextualHeader />
+            <QuickActions />
             <Routes>
               <Route path="/" element={
                 <RouteLoadingWrapper>

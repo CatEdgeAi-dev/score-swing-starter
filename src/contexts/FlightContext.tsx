@@ -30,6 +30,7 @@ interface FlightContextType {
     courseName: string;
     players: Player[];
   }) => Flight;
+  leaveFlight: () => void;
 }
 
 const FlightContext = createContext<FlightContextType | undefined>(undefined);
@@ -70,6 +71,11 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return newFlight;
   };
 
+  const leaveFlight = () => {
+    setCurrentFlight(null);
+    setCurrentPlayer(null);
+  };
+
   return (
     <FlightContext.Provider value={{
       currentFlight,
@@ -78,7 +84,8 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setCurrentPlayer,
       isFlightMode,
       switchToPlayer,
-      createFlight
+      createFlight,
+      leaveFlight,
     }}>
       {children}
     </FlightContext.Provider>
