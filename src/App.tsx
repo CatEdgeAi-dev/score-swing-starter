@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import RoundSelection from "./pages/RoundSelection";
 import Scorecard from "./pages/Scorecard";
 import RoundHistory from "./pages/RoundHistory";
+import Stats from "./pages/Stats";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/rounds" element={<RoundSelection />} />
               <Route path="/scorecard" element={<Scorecard />} />
               <Route path="/history" element={<RoundHistory />} />
+              <Route path="/stats" element={<Stats />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
