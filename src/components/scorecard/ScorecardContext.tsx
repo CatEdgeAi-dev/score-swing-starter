@@ -13,6 +13,7 @@ export interface HoleData {
 interface ScorecardContextType {
   holes: Record<number, HoleData>;
   updateHole: (holeNumber: number, data: Partial<HoleData>) => void;
+  resetScorecard: () => void;
   getTotalScore: () => number;
   getAveragePutts: () => number;
   getGIRPercentage: () => number;
@@ -39,6 +40,22 @@ export const ScorecardProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
     return initialHoles;
   });
+
+  const resetScorecard = () => {
+    const initialHoles: Record<number, HoleData> = {};
+    for (let i = 1; i <= 18; i++) {
+      initialHoles[i] = {
+        strokes: 0,
+        putts: 0,
+        fairwayHit: false,
+        greenInRegulation: false,
+        upAndDown: false,
+        notes: '',
+        par: defaultPars[i - 1],
+      };
+    }
+    setHoles(initialHoles);
+  };
 
   const updateHole = (holeNumber: number, data: Partial<HoleData>) => {
     setHoles(prev => ({
@@ -73,6 +90,7 @@ export const ScorecardProvider: React.FC<{ children: ReactNode }> = ({ children 
     <ScorecardContext.Provider value={{
       holes,
       updateHole,
+      resetScorecard,
       getTotalScore,
       getAveragePutts,
       getGIRPercentage,

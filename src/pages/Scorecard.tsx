@@ -4,12 +4,40 @@ import { Separator } from '@/components/ui/separator';
 import { HoleInput } from '@/components/scorecard/HoleInput';
 import { StatSummary } from '@/components/scorecard/StatSummary';
 import { ScorecardProvider, useScorecardContext } from '@/components/scorecard/ScorecardContext';
+import { SaveRoundDialog } from '@/components/scorecard/SaveRoundDialog';
 import { TopBar } from '@/components/navigation/TopBar';
 import { BottomTabs } from '@/components/navigation/BottomTabs';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useRounds } from '@/hooks/useRounds';
+import { Share2 } from 'lucide-react';
 
 const ScorecardContent = () => {
   const { holes, getTotalScore, getAveragePutts, getGIRPercentage } = useScorecardContext();
+  const { shareRound } = useRounds();
+
+  const handleShare = async () => {
+    // Create a temporary round for sharing
+    const shareText = `🏌️ Golf Round Summary
+⛳ Score: ${getTotalScore()} 
+🏀 Avg Putts: ${getAveragePutts().toFixed(1)}
+🎯 GIR: ${getGIRPercentage().toFixed(0)}%
+
+Shared from Golf Scorecard App`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Golf Round Summary',
+          text: shareText,
+        });
+      } catch (error) {
+        // Fall back to clipboard
+        await navigator.clipboard.writeText(shareText);
+      }
+    } else {
+      await navigator.clipboard.writeText(shareText);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -38,10 +66,17 @@ const ScorecardContent = () => {
         />
 
         <div className="space-y-3 pt-4">
-          <Button className="w-full min-h-[44px]">
-            Save Round
-          </Button>
-          <Button variant="outline" className="w-full min-h-[44px]">
+          <SaveRoundDialog>
+            <Button className="w-full min-h-[44px]">
+              Save Round
+            </Button>
+          </SaveRoundDialog>
+          <Button 
+            variant="outline" 
+            className="w-full min-h-[44px]" 
+            onClick={handleShare}
+          >
+            <Share2 className="mr-2 h-4 w-4" />
             Share Scorecard
           </Button>
         </div>
