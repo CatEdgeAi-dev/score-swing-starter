@@ -14,7 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      holes: {
+        Row: {
+          created_at: string
+          fairway_hit: boolean
+          green_in_regulation: boolean
+          hole_number: number
+          id: string
+          notes: string | null
+          par: number
+          putts: number
+          round_id: string
+          strokes: number
+          up_and_down: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fairway_hit?: boolean
+          green_in_regulation?: boolean
+          hole_number: number
+          id?: string
+          notes?: string | null
+          par: number
+          putts?: number
+          round_id: string
+          strokes?: number
+          up_and_down?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fairway_hit?: boolean
+          green_in_regulation?: boolean
+          hole_number?: number
+          id?: string
+          notes?: string | null
+          par?: number
+          putts?: number
+          round_id?: string
+          strokes?: number
+          up_and_down?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holes_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rounds: {
+        Row: {
+          course_name: string | null
+          created_at: string
+          date_played: string
+          fairways_hit: number
+          greens_in_regulation: number
+          id: string
+          total_putts: number
+          total_score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_name?: string | null
+          created_at?: string
+          date_played?: string
+          fairways_hit?: number
+          greens_in_regulation?: number
+          id?: string
+          total_putts?: number
+          total_score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_name?: string | null
+          created_at?: string
+          date_played?: string
+          fairways_hit?: number
+          greens_in_regulation?: number
+          id?: string
+          total_putts?: number
+          total_score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
