@@ -44,7 +44,7 @@ const ScorecardContent = () => {
   const [resetType, setResetType] = useState<'hole' | 'round'>('hole');
   const [showNewRoundDialog, setShowNewRoundDialog] = useState(false);
   const [showBackDialog, setShowBackDialog] = useState(false);
-  const [inputMode, setInputMode] = useState<'focused' | 'panel'>('focused');
+  const [inputMode, setInputMode] = useState<'focused' | 'panel'>('panel');
 
   // Current date
   const currentDate = isFlightMode 
