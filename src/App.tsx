@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { FlightProvider } from "./contexts/FlightContext";
+import { ScorecardProvider } from "./components/scorecard/ScorecardContext";
 import { RouteLoadingWrapper } from "./components/routing/RouteLoadingWrapper";
 import { RouteGuard } from "./components/routing/RouteGuard";
 import { Breadcrumbs } from "./components/navigation/Breadcrumbs";
@@ -25,14 +26,15 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <FlightProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Breadcrumbs />
-            <ContextualHeader />
-            <QuickActions />
-            <Routes>
+        <ScorecardProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Breadcrumbs />
+              <ContextualHeader />
+              <QuickActions />
+              <Routes>
               <Route path="/" element={
                 <RouteLoadingWrapper>
                   <Index />
@@ -79,9 +81,10 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </FlightProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+      </ScorecardProvider>
+    </FlightProvider>
+  </AuthProvider>
+</QueryClientProvider>
 );
 
 export default App;

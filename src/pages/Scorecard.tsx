@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { HoleInput } from '@/components/scorecard/HoleInput';
 import { StatSummary } from '@/components/scorecard/StatSummary';
-import { ScorecardProvider, useScorecardContext } from '@/components/scorecard/ScorecardContext';
+import { useScorecardContext } from '@/components/scorecard/ScorecardContext';
 import { SaveRoundDialog } from '@/components/scorecard/SaveRoundDialog';
 import { EnhancedHeader } from '@/components/scorecard/EnhancedHeader';
 import { HoleNavigation } from '@/components/scorecard/HoleNavigation';
@@ -389,9 +389,7 @@ Shared from Golf Scorecard App`;
 const Scorecard = () => {
   return (
     <ProtectedRoute>
-      <ScorecardProvider>
-        <ScorecardContent />
-      </ScorecardProvider>
+      <ScorecardContent />
     </ProtectedRoute>
   );
 };
