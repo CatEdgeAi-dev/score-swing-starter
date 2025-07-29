@@ -114,7 +114,7 @@ const RoundHistory = () => {
       <div className="min-h-screen bg-background flex flex-col">
         <TopBar title="Round History" />
         
-        <div className="flex-1 max-w-md mx-auto p-4 space-y-6 pb-20">
+        <div className="flex-1 max-w-md mx-auto p-4 space-y-6 pb-24">
           {/* Header */}
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center space-x-2">

@@ -158,7 +158,7 @@ const StatsContent: React.FC = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <TopBar title="Statistics" />
       
-      <div className="flex-1 p-4 pb-32 space-y-6">
+      <div className="flex-1 p-4 pb-24 space-y-6">
         <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">

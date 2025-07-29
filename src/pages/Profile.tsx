@@ -25,7 +25,7 @@ const ProfileContent: React.FC = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <TopBar title="Profile" />
       
-      <div className="flex-1 p-4 space-y-6">
+      <div className="flex-1 p-4 space-y-6 pb-24">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

@@ -72,7 +72,7 @@ const RoundSelection = () => {
       <div className="min-h-screen bg-background flex flex-col">
         <TopBar title="Golf Scorecard" />
         
-        <div className="flex-1 max-w-md mx-auto p-4 space-y-6 pb-20">
+        <div className="flex-1 max-w-md mx-auto p-4 space-y-6 pb-24">
           {/* Welcome Section */}
           <div className="text-center space-y-2 py-4">
             <h1 className="text-2xl font-bold text-primary">Ready to Play?</h1>

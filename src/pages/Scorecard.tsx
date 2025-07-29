@@ -257,7 +257,7 @@ Shared from Golf Scorecard App`;
     <div className="min-h-screen bg-background flex flex-col" {...swipeHandlers}>
       <TopBar title="Golf Scorecard" />
       
-        <div className="flex-1 max-w-md mx-auto p-4 space-y-4 pb-32">
+        <div className="flex-1 max-w-md mx-auto p-4 space-y-4 pb-24">
           {/* Flight Player Selector - only show in flight mode */}
           {isFlightMode && currentFlight && currentPlayer && (
             <FlightPlayerSelector
