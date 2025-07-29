@@ -47,23 +47,41 @@ const RoundHistory = () => {
 
   const loadRounds = async () => {
     const fetchedRounds = await fetchRounds();
-    const processedRounds = fetchedRounds.map(round => ({
-      id: round.id,
-      courseName: round.course_name || 'Golf Course',
-      datePlayedInfo: new Date(round.date_played).toLocaleDateString('en-US', {
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      }),
-      totalScore: round.total_score,
-      totalPutts: round.total_putts,
-      averagePutts: round.total_putts / 18,
-      girPercentage: (round.greens_in_regulation / 18) * 100,
-      fairwayPercentage: (round.fairways_hit / 14) * 100, // Assuming 14 driving holes
-      isFlightRound: false, // Will be updated when we implement flight support
-      holes: (round as any).holes
-    }));
+    const processedRounds = fetchedRounds.map(round => {
+      // Determine if this is a flight round and get player info
+      const isFlightRound = !!round.flight_id;
+      let playerName = '';
+      let flightName = '';
+      
+      if (isFlightRound) {
+        flightName = (round as any).flights?.name || 'Unknown Flight';
+        // For flight rounds, show the user's display name
+        playerName = (round as any).profiles?.display_name || 'Unknown Player';
+      } else {
+        // For solo rounds, show the user's display name
+        playerName = (round as any).profiles?.display_name || 'Solo Player';
+      }
+
+      return {
+        id: round.id,
+        courseName: round.course_name || 'Golf Course',
+        datePlayedInfo: new Date(round.date_played).toLocaleDateString('en-US', {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        }),
+        totalScore: round.total_score,
+        totalPutts: round.total_putts,
+        averagePutts: round.total_putts / 18,
+        girPercentage: (round.greens_in_regulation / 18) * 100,
+        fairwayPercentage: (round.fairways_hit / 14) * 100, // Assuming 14 driving holes
+        isFlightRound,
+        flightName,
+        playerName,
+        holes: (round as any).holes
+      };
+    });
     
     setRounds(processedRounds);
     setStatsLoading(false);

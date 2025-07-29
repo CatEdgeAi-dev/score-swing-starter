@@ -15,6 +15,8 @@ export interface Round {
   greens_in_regulation: number;
   created_at: string;
   updated_at: string;
+  flight_id?: string;
+  player_id?: string;
 }
 
 export const useRounds = () => {
@@ -36,7 +38,10 @@ export const useRounds = () => {
         .from('rounds')
         .select(`
           *,
-          holes(*)
+          holes(*),
+          flights(name),
+          profiles!rounds_user_id_fkey(display_name),
+          flight_players(guest_name, user_id, profiles!flight_players_user_id_fkey(display_name))
         `)
         .eq('user_id', user.id)
         .order('date_played', { ascending: false });
@@ -206,7 +211,10 @@ Shared from Golf Scorecard App`;
         .from('rounds')
         .select(`
           *,
-          holes(*)
+          holes(*),
+          flights(name),
+          profiles!rounds_user_id_fkey(display_name),
+          flight_players(guest_name, user_id, profiles!flight_players_user_id_fkey(display_name))
         `)
         .eq('user_id', user.id)
         .order('date_played', { ascending: false });

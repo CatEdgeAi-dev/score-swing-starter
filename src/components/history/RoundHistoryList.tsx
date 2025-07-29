@@ -93,10 +93,16 @@ const RoundHistoryCard: React.FC<RoundHistoryCardProps> = ({ round, onViewDetail
       
       <CardContent className="pt-0">
         <div className="space-y-3">
-          {round.isFlightRound && round.playerName && (
+          {/* Player name display for both solo and flight rounds */}
+          {round.playerName && (
             <div className="flex items-center space-x-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">{round.playerName}</span>
+              {round.isFlightRound && (
+                <Badge variant="outline" className="text-xs">
+                  Flight: {round.flightName}
+                </Badge>
+              )}
             </div>
           )}
           
