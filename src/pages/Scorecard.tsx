@@ -7,6 +7,8 @@ import { StatSummary } from '@/components/scorecard/StatSummary';
 import { ScorecardProvider, useScorecardContext } from '@/components/scorecard/ScorecardContext';
 import { SaveRoundDialog } from '@/components/scorecard/SaveRoundDialog';
 import { EnhancedHeader } from '@/components/scorecard/EnhancedHeader';
+import { HoleNavigation } from '@/components/scorecard/HoleNavigation';
+import { AdvancedHoleNavigation } from '@/components/scorecard/AdvancedHoleNavigation';
 import { FloatingActionButtons } from '@/components/scorecard/FloatingActionButtons';
 import { ConfirmationDialog } from '@/components/scorecard/ConfirmationDialog';
 import { ScorecardSkeleton } from '@/components/scorecard/LoadingSpinner';
@@ -39,6 +41,17 @@ const ScorecardContent = () => {
     day: 'numeric'
   });
 
+  // Find holes with data for navigation indicators
+  const holesWithData = useMemo(() => {
+    const holesArray = [];
+    for (let i = 1; i <= 18; i++) {
+      const hole = holes[i];
+      if (hole.strokes > 0 || hole.putts > 0 || hole.notes.trim() !== '') {
+        holesArray.push(i);
+      }
+    }
+    return holesArray;
+  }, [holes]);
   // Find the furthest hole with data for progress
   const furthestHole = useMemo(() => {
     for (let i = 18; i >= 1; i--) {
@@ -182,6 +195,16 @@ Shared from Golf Scorecard App`;
     }
   };
 
+  // Direct hole selection
+  const handleHoleSelect = (hole: number) => {
+    setCurrentHole(hole);
+    toast({
+      title: `Hole ${hole}`,
+      description: "Jumped to selected hole",
+      duration: 1000,
+    });
+  };
+  
   // Navigation handlers
   const handlePrevHole = () => {
     if (currentHole > 1) {
@@ -214,14 +237,15 @@ Shared from Golf Scorecard App`;
           onWeatherChange={setWeather}
         />
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center text-primary">Current Hole</CardTitle>
-            <p className="text-center text-muted-foreground">
-              Hole {currentHole} of 18 • Swipe to navigate
-            </p>
-          </CardHeader>
-        </Card>
+        <AdvancedHoleNavigation
+          currentHole={currentHole}
+          totalHoles={18}
+          onHoleSelect={handleHoleSelect}
+          onPrevious={handlePrevHole}
+          onNext={handleNextHole}
+          holesWithData={holesWithData}
+          className="mb-4"
+        />
 
         {/* Current Hole Display */}
         <HoleInput holeNumber={currentHole} />
