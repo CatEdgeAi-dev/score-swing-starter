@@ -21,7 +21,7 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate('/scorecard');
+      navigate('/rounds');
     }
   }, [user, navigate]);
 
@@ -65,7 +65,7 @@ const Login = () => {
           title: "Welcome back!",
           description: "Successfully signed in to your account.",
         });
-        navigate('/scorecard');
+        navigate('/rounds');
       }
     } catch (error) {
       toast({
