@@ -40,8 +40,7 @@ export const useRounds = () => {
           *,
           holes(*),
           flights(name),
-          profiles!rounds_user_id_fkey(display_name),
-          flight_players(guest_name, user_id, profiles!flight_players_user_id_fkey(display_name))
+          profiles(display_name)
         `)
         .eq('user_id', user.id)
         .order('date_played', { ascending: false });
@@ -213,8 +212,7 @@ Shared from Golf Scorecard App`;
           *,
           holes(*),
           flights(name),
-          profiles!rounds_user_id_fkey(display_name),
-          flight_players(guest_name, user_id, profiles!flight_players_user_id_fkey(display_name))
+          profiles(display_name)
         `)
         .eq('user_id', user.id)
         .order('date_played', { ascending: false });
