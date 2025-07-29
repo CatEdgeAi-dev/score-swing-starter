@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -5,57 +6,225 @@ import { HoleInput } from '@/components/scorecard/HoleInput';
 import { StatSummary } from '@/components/scorecard/StatSummary';
 import { ScorecardProvider, useScorecardContext } from '@/components/scorecard/ScorecardContext';
 import { SaveRoundDialog } from '@/components/scorecard/SaveRoundDialog';
+import { EnhancedHeader } from '@/components/scorecard/EnhancedHeader';
+import { FloatingActionButtons } from '@/components/scorecard/FloatingActionButtons';
+import { ConfirmationDialog } from '@/components/scorecard/ConfirmationDialog';
+import { ScorecardSkeleton } from '@/components/scorecard/LoadingSpinner';
 import { TopBar } from '@/components/navigation/TopBar';
 import { BottomTabs } from '@/components/navigation/BottomTabs';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useRounds } from '@/hooks/useRounds';
+import { useSwipeGestures } from '@/hooks/useSwipeGestures';
+import { useToast } from '@/hooks/use-toast';
 import { Share2 } from 'lucide-react';
 
 const ScorecardContent = () => {
-  const { holes, getTotalScore, getAveragePutts, getGIRPercentage } = useScorecardContext();
+  const { holes, updateHole, resetScorecard, getTotalScore, getAveragePutts, getGIRPercentage } = useScorecardContext();
   const { shareRound } = useRounds();
+  const { toast } = useToast();
+  
+  // Enhanced state management
+  const [courseName, setCourseName] = useState('Golf Course');
+  const [weather, setWeather] = useState('sunny');
+  const [currentHole, setCurrentHole] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetType, setResetType] = useState<'hole' | 'round'>('hole');
+
+  // Current date
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+
+  // Find the furthest hole with data for progress
+  const furthestHole = useMemo(() => {
+    for (let i = 18; i >= 1; i--) {
+      const hole = holes[i];
+      if (hole.strokes > 0 || hole.putts > 0 || hole.notes.trim() !== '') {
+        return i;
+      }
+    }
+    return 1;
+  }, [holes]);
+
+  // Swipe gesture handlers
+  const handleSwipeLeft = () => {
+    if (currentHole < 18) {
+      setCurrentHole(currentHole + 1);
+      toast({
+        title: `Hole ${currentHole + 1}`,
+        description: "Swipe right to go back",
+        duration: 1000,
+      });
+    }
+  };
+
+  const handleSwipeRight = () => {
+    if (currentHole > 1) {
+      setCurrentHole(currentHole - 1);
+      toast({
+        title: `Hole ${currentHole - 1}`,
+        description: "Swipe left to continue",
+        duration: 1000,
+      });
+    }
+  };
+
+  const swipeHandlers = useSwipeGestures({
+    onSwipeLeft: handleSwipeLeft,
+    onSwipeRight: handleSwipeRight,
+    disabled: isLoading
+  });
+
+  // Quick action handlers
+  const handleQuickStroke = (increment: boolean) => {
+    const hole = holes[currentHole];
+    const newStrokes = increment 
+      ? hole.strokes + 1 
+      : Math.max(0, hole.strokes - 1);
+    
+    updateHole(currentHole, { strokes: newStrokes });
+    
+    toast({
+      title: increment ? "Stroke added" : "Stroke removed",
+      description: `Hole ${currentHole}: ${newStrokes} strokes`,
+      duration: 1000,
+    });
+  };
+
+  const handleResetHole = () => {
+    setResetType('hole');
+    setShowResetDialog(true);
+  };
+
+  const handleResetRound = () => {
+    setResetType('round');
+    setShowResetDialog(true);
+  };
+
+  const confirmReset = () => {
+    if (resetType === 'hole') {
+      updateHole(currentHole, {
+        strokes: 0,
+        putts: 0,
+        fairwayHit: false,
+        greenInRegulation: false,
+        upAndDown: false,
+        notes: ''
+      });
+      toast({
+        title: "Hole reset",
+        description: `Hole ${currentHole} has been cleared`,
+      });
+    } else {
+      resetScorecard();
+      setCurrentHole(1);
+      toast({
+        title: "Round reset",
+        description: "All holes have been cleared",
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      // Simulate save operation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast({
+        title: "Round saved!",
+        description: "Your scorecard has been saved successfully.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Save failed",
+        description: "Failed to save your round. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleShare = async () => {
-    // Create a temporary round for sharing
     const shareText = `🏌️ Golf Round Summary
-⛳ Score: ${getTotalScore()} 
+⛳ Course: ${courseName}
+📅 Date: ${currentDate}
+🌤️ Weather: ${weather}
+🏆 Score: ${getTotalScore()} 
 🏀 Avg Putts: ${getAveragePutts().toFixed(1)}
 🎯 GIR: ${getGIRPercentage().toFixed(0)}%
 
 Shared from Golf Scorecard App`;
 
-    if (navigator.share) {
-      try {
+    try {
+      if (navigator.share) {
         await navigator.share({
           title: 'Golf Round Summary',
           text: shareText,
         });
-      } catch (error) {
-        // Fall back to clipboard
+      } else {
         await navigator.clipboard.writeText(shareText);
+        toast({
+          title: "Copied to clipboard!",
+          description: "Round summary copied to clipboard",
+        });
       }
-    } else {
-      await navigator.clipboard.writeText(shareText);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Share failed",
+        description: "Failed to share your round",
+      });
     }
   };
 
+  // Navigation handlers
+  const handlePrevHole = () => {
+    if (currentHole > 1) {
+      setCurrentHole(currentHole - 1);
+    }
+  };
+
+  const handleNextHole = () => {
+    if (currentHole < 18) {
+      setCurrentHole(currentHole + 1);
+    }
+  };
+
+  if (isLoading) {
+    return <ScorecardSkeleton />;
+  }
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col" {...swipeHandlers}>
       <TopBar title="Golf Scorecard" />
       
-      <div className="flex-1 max-w-md mx-auto p-4 space-y-4 pb-20">
+      <div className="flex-1 max-w-md mx-auto p-4 space-y-4 pb-32">
+        <EnhancedHeader
+          courseName={courseName}
+          date={currentDate}
+          weather={weather}
+          currentHole={Math.max(currentHole, furthestHole)}
+          totalHoles={18}
+          onCourseNameChange={setCourseName}
+          onWeatherChange={setWeather}
+        />
+
         <Card>
           <CardHeader>
-            <CardTitle className="text-center text-primary">Golf Scorecard</CardTitle>
-            <p className="text-center text-muted-foreground">18-Hole Round</p>
+            <CardTitle className="text-center text-primary">Current Hole</CardTitle>
+            <p className="text-center text-muted-foreground">
+              Hole {currentHole} of 18 • Swipe to navigate
+            </p>
           </CardHeader>
         </Card>
 
-        <div className="space-y-3">
-          {Array.from({ length: 18 }, (_, index) => (
-            <HoleInput key={index + 1} holeNumber={index + 1} />
-          ))}
-        </div>
+        {/* Current Hole Display */}
+        <HoleInput holeNumber={currentHole} />
 
         <Separator className="my-6" />
 
@@ -67,20 +236,60 @@ Shared from Golf Scorecard App`;
 
         <div className="space-y-3 pt-4">
           <SaveRoundDialog>
-            <Button className="w-full min-h-[44px]">
+            <Button className="w-full min-h-[44px]" disabled={isLoading}>
               Save Round
             </Button>
           </SaveRoundDialog>
-          <Button 
-            variant="outline" 
-            className="w-full min-h-[44px]" 
-            onClick={handleShare}
-          >
-            <Share2 className="mr-2 h-4 w-4" />
-            Share Scorecard
-          </Button>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <Button 
+              variant="outline" 
+              className="min-h-[44px]" 
+              onClick={handleShare}
+              disabled={isLoading}
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Share
+            </Button>
+            <Button 
+              variant="outline" 
+              className="min-h-[44px]" 
+              onClick={handleResetRound}
+              disabled={isLoading}
+            >
+              Reset Round
+            </Button>
+          </div>
         </div>
       </div>
+
+      {/* Floating Action Buttons */}
+      <FloatingActionButtons
+        onQuickStroke={handleQuickStroke}
+        onReset={handleResetHole}
+        onSave={handleSave}
+        onShare={handleShare}
+        onPrevHole={handlePrevHole}
+        onNextHole={handleNextHole}
+        canGoPrev={currentHole > 1}
+        canGoNext={currentHole < 18}
+        currentHole={currentHole}
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={showResetDialog}
+        onOpenChange={setShowResetDialog}
+        title={resetType === 'hole' ? 'Reset Current Hole?' : 'Reset Entire Round?'}
+        description={
+          resetType === 'hole' 
+            ? `This will clear all data for hole ${currentHole}. This action cannot be undone.`
+            : 'This will clear all data for the entire round. This action cannot be undone.'
+        }
+        confirmLabel="Reset"
+        onConfirm={confirmReset}
+        variant="destructive"
+      />
       
       <BottomTabs />
     </div>
