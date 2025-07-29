@@ -57,8 +57,13 @@ export const useRounds = () => {
 
   // Load rounds when user changes
   useEffect(() => {
-    loadRounds();
-  }, [user]);
+    if (user) {
+      loadRounds();
+    } else {
+      setRounds([]);
+      setLoading(false);
+    }
+  }, [user?.id]); // Only depend on user.id to avoid infinite loops
 
   const saveRound = async (
     holes: Record<number, HoleData>,
@@ -93,9 +98,10 @@ export const useRounds = () => {
           greens_in_regulation: greensInRegulation,
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (roundError) throw roundError;
+      if (!round) throw new Error('Failed to create round');
 
       // Create hole records
       const holeRecords = Object.entries(holes).map(([holeNumber, holeData]) => ({
@@ -145,7 +151,7 @@ export const useRounds = () => {
         .from('rounds')
         .select('*, holes(*)')
         .eq('id', roundId)
-        .single();
+        .maybeSingle();
 
       if (!round) return null;
 
@@ -226,7 +232,7 @@ Shared from Golf Scorecard App`;
           flight_players(guest_name)
         `)
         .eq('id', roundId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return round;
