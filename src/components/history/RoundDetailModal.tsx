@@ -91,6 +91,8 @@ export const RoundDetailModal: React.FC<RoundDetailModalProps> = ({
   };
 
   const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/shared/${round.id}`;
+    
     const shareText = `🏌️ Round Details
 ⛳ Course: ${round.courseName}
 📅 Date: ${round.datePlayedInfo}
@@ -98,14 +100,18 @@ ${round.isFlightRound ? `👥 Flight: ${round.flightName}\n🏌️ Player: ${rou
 🏀 Avg Putts: ${round.averagePutts.toFixed(1)}
 🎯 GIR: ${round.girPercentage.toFixed(0)}%
 
-Shared from Golf Scorecard App`;
+View full round details: ${shareUrl}`;
 
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'Golf Round Details', text: shareText });
+        await navigator.share({
+          title: 'Golf Round Details',
+          text: shareText,
+          url: shareUrl,
+        });
       } else {
         await navigator.clipboard.writeText(shareText);
-        toast({ title: "Copied to clipboard!", description: "Round details copied" });
+        toast({ title: "Copied to clipboard!", description: "Round details and link copied to clipboard." });
       }
     } catch (error) {
       toast({ variant: "destructive", title: "Share failed" });

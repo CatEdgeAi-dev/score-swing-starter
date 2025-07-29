@@ -10,7 +10,13 @@ const Index = () => {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        navigate('/rounds');
+        // Check if this is a new user who hasn't seen onboarding
+        const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+        if (!hasSeenOnboarding) {
+          navigate('/onboarding');
+        } else {
+          navigate('/rounds');
+        }
       } else {
         navigate('/login');
       }

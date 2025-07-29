@@ -175,6 +175,9 @@ export const useRounds = () => {
 
   const shareRound = async (roundId: string): Promise<string | null> => {
     try {
+      // Generate a shareable link with deep linking
+      const shareUrl = `${window.location.origin}/shared/${roundId}`;
+      
       // Generate a shareable text summary
       const { data: round } = await supabase
         .from('rounds')
@@ -195,18 +198,19 @@ export const useRounds = () => {
 🎯 GIR: ${round.greens_in_regulation}/18
 🎪 Fairways: ${round.fairways_hit}/${round.holes?.filter((h: any) => h.par > 3).length || 14}
 
-Shared from Golf Scorecard App`;
+View full round details: ${shareUrl}`;
 
       if (navigator.share) {
         await navigator.share({
           title: 'Golf Round Summary',
           text: shareText,
+          url: shareUrl,
         });
       } else {
         await navigator.clipboard.writeText(shareText);
         toast({
           title: "Copied to clipboard!",
-          description: "Round summary copied to clipboard.",
+          description: "Round summary and link copied to clipboard.",
         });
       }
 

@@ -19,6 +19,8 @@ import RoundHistory from "./pages/RoundHistory";
 import Stats from "./pages/Stats";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Onboarding from "./pages/Onboarding";
+import SharedRound from "./pages/SharedRound";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -77,6 +79,16 @@ const App = () => (
               <Route path="/settings" element={
                 <RouteLoadingWrapper>
                   <Settings />
+                </RouteLoadingWrapper>
+              } />
+              <Route path="/onboarding" element={
+                <RouteLoadingWrapper>
+                  <Onboarding />
+                </RouteLoadingWrapper>
+              } />
+              <Route path="/shared/:roundId" element={
+                <RouteLoadingWrapper>
+                  <SharedRound />
                 </RouteLoadingWrapper>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
