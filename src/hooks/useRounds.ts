@@ -17,6 +17,8 @@ export interface Round {
   updated_at: string;
   flight_id?: string;
   player_id?: string;
+  is_flight_round?: boolean;
+  flight_name?: string;
 }
 
 export const useRounds = () => {
@@ -90,7 +92,9 @@ export const useRounds = () => {
 
   const saveRound = async (
     holes: Record<number, HoleData>,
-    courseName?: string
+    courseName?: string,
+    isFlightRound?: boolean,
+    flightName?: string
   ): Promise<Round | null> => {
     if (!user) {
       toast({
@@ -119,6 +123,8 @@ export const useRounds = () => {
           total_putts: totalPutts,
           fairways_hit: fairwaysHit,
           greens_in_regulation: greensInRegulation,
+          is_flight_round: isFlightRound || false,
+          flight_name: flightName || null,
         })
         .select()
         .maybeSingle();

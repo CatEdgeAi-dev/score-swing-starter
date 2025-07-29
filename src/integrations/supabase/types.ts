@@ -163,8 +163,10 @@ export type Database = {
           date_played: string
           fairways_hit: number
           flight_id: string | null
+          flight_name: string | null
           greens_in_regulation: number
           id: string
+          is_flight_round: boolean
           player_id: string | null
           total_putts: number
           total_score: number
@@ -177,8 +179,10 @@ export type Database = {
           date_played?: string
           fairways_hit?: number
           flight_id?: string | null
+          flight_name?: string | null
           greens_in_regulation?: number
           id?: string
+          is_flight_round?: boolean
           player_id?: string | null
           total_putts?: number
           total_score?: number
@@ -191,8 +195,10 @@ export type Database = {
           date_played?: string
           fairways_hit?: number
           flight_id?: string | null
+          flight_name?: string | null
           greens_in_regulation?: number
           id?: string
+          is_flight_round?: boolean
           player_id?: string | null
           total_putts?: number
           total_score?: number

@@ -49,12 +49,12 @@ const RoundHistory = () => {
     const fetchedRounds = await fetchRounds();
     const processedRounds = fetchedRounds.map(round => {
       // Determine if this is a flight round and get player info
-      const isFlightRound = !!round.flight_id;
+      const isFlightRound = round.is_flight_round || !!round.flight_id;
       let playerName = '';
       let flightName = '';
       
       if (isFlightRound) {
-        flightName = (round as any).flights?.name || 'Unknown Flight';
+        flightName = round.flight_name || (round as any).flights?.name || 'Unknown Flight';
         // For flight rounds, show the user's display name
         playerName = (round as any).profiles?.display_name || 'Unknown Player';
       } else {

@@ -26,7 +26,10 @@ export const SaveRoundDialog: React.FC<SaveRoundDialogProps> = ({ children }) =>
   const navigate = useNavigate();
 
   const handleSave = async () => {
-    const savedRound = await saveRound(holes, courseName || undefined);
+    const isFlightRound = isFlightMode && !!currentFlight;
+    const flightName = isFlightMode && currentFlight ? currentFlight.name : undefined;
+    
+    const savedRound = await saveRound(holes, courseName || undefined, isFlightRound, flightName);
     
     if (savedRound) {
       setShowStats(true); // Show stats instead of closing immediately
