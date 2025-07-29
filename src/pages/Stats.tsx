@@ -31,6 +31,9 @@ import {
 } from 'lucide-react';
 import { useRounds } from '@/hooks/useRounds';
 import { LoadingSpinner } from '@/components/scorecard/LoadingSpinner';
+import { TopBar } from '@/components/navigation/TopBar';
+import { BottomTabs } from '@/components/navigation/BottomTabs';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 interface RoundData {
   id: string;
@@ -50,7 +53,7 @@ interface RoundData {
   }>;
 }
 
-const Stats: React.FC = () => {
+const StatsContent: React.FC = () => {
   const [rounds, setRounds] = useState<RoundData[]>([]);
   const [loading, setLoading] = useState(true);
   const { fetchRounds } = useRounds();
@@ -79,27 +82,35 @@ const Stats: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <LoadingSpinner />
+      <div className="min-h-screen bg-background flex flex-col">
+        <TopBar title="Statistics" />
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+        <BottomTabs />
       </div>
     );
   }
 
   if (rounds.length === 0) {
     return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-center mb-8">Golf Statistics</h1>
-          <Card>
-            <CardContent className="p-8 text-center">
-              <BarChart3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <h3 className="text-xl font-semibold mb-2">No Statistics Available</h3>
-              <p className="text-muted-foreground">
-                Play some rounds to see your golf statistics and performance analytics.
-              </p>
-            </CardContent>
-          </Card>
+      <div className="min-h-screen bg-background flex flex-col">
+        <TopBar title="Statistics" />
+        <div className="flex-1 p-4">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-3xl font-bold text-center mb-8">Golf Statistics</h1>
+            <Card>
+              <CardContent className="p-8 text-center">
+                <BarChart3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-xl font-semibold mb-2">No Statistics Available</h3>
+                <p className="text-muted-foreground">
+                  Play some rounds to see your golf statistics and performance analytics.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
+        <BottomTabs />
       </div>
     );
   }
@@ -144,8 +155,11 @@ const Stats: React.FC = () => {
   const COLORS = ['#10b981', '#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#dc2626'];
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background flex flex-col">
+      <TopBar title="Statistics" />
+      
+      <div className="flex-1 p-4 pb-32 space-y-6">
+        <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Golf Statistics</h1>
@@ -328,8 +342,19 @@ const Stats: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
+
+      <BottomTabs />
     </div>
+  );
+};
+
+const Stats: React.FC = () => {
+  return (
+    <ProtectedRoute>
+      <StatsContent />
+    </ProtectedRoute>
   );
 };
 
