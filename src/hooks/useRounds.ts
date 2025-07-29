@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -19,8 +19,46 @@ export interface Round {
 
 export const useRounds = () => {
   const [loading, setLoading] = useState(false);
+  const [rounds, setRounds] = useState<Round[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const loadRounds = async () => {
+    if (!user) {
+      setRounds([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data: roundsData, error } = await supabase
+        .from('rounds')
+        .select(`
+          *,
+          holes(*)
+        `)
+        .eq('user_id', user.id)
+        .order('date_played', { ascending: false });
+
+      if (error) throw error;
+      setRounds(roundsData || []);
+    } catch (error: any) {
+      console.error('Error fetching rounds:', error);
+      toast({
+        variant: "destructive",
+        title: "Error loading rounds",
+        description: error.message || "Failed to load round history.",
+      });
+      setRounds([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load rounds when user changes
+  useEffect(() => {
+    loadRounds();
+  }, [user]);
 
   const saveRound = async (
     holes: Record<number, HoleData>,
@@ -82,6 +120,9 @@ export const useRounds = () => {
         title: "Round saved!",
         description: "Your golf round has been saved successfully.",
       });
+
+      // Refresh rounds after saving
+      await loadRounds();
 
       return round;
     } catch (error: any) {
@@ -201,6 +242,9 @@ Shared from Golf Scorecard App`;
   };
 
   return {
+    rounds,
+    isLoading: loading,
+    refetch: loadRounds,
     saveRound,
     shareRound,
     fetchRounds,

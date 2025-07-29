@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { BottomTabs } from '@/components/navigation/BottomTabs';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFlightContext } from '@/contexts/FlightContext';
+import { useRounds } from '@/hooks/useRounds';
 import { 
   User, 
   Users, 
@@ -23,6 +24,12 @@ const RoundSelection = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { createFlight } = useFlightContext();
+  const { rounds, isLoading, refetch } = useRounds();
+
+  // Refetch rounds when the component mounts or when returning from scorecard
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   const handleSoloRound = () => {
     // Set flag to indicate coming from rounds page
@@ -40,6 +47,12 @@ const RoundSelection = () => {
     sessionStorage.setItem('fromRounds', 'true');
     navigate('/scorecard');
   };
+
+  // Calculate stats from rounds data
+  const totalRounds = rounds.length;
+  const avgScore = totalRounds > 0 
+    ? Math.round(rounds.reduce((sum, round) => sum + round.total_score, 0) / totalRounds)
+    : null;
 
   const getUserName = () => {
     if (user?.email) {
@@ -105,7 +118,7 @@ const RoundSelection = () => {
               <Card>
                 <CardContent className="p-4 text-center">
                   <Trophy className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold">{totalRounds}</p>
                   <p className="text-xs text-muted-foreground">Rounds Played</p>
                 </CardContent>
               </Card>
@@ -113,7 +126,7 @@ const RoundSelection = () => {
               <Card>
                 <CardContent className="p-4 text-center">
                   <TrendingUp className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <p className="text-2xl font-bold">--</p>
+                  <p className="text-2xl font-bold">{avgScore || '--'}</p>
                   <p className="text-xs text-muted-foreground">Avg Score</p>
                 </CardContent>
               </Card>
@@ -130,15 +143,54 @@ const RoundSelection = () => {
               </Button>
             </div>
             
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Calendar className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">No rounds played yet</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Start your first round to see your activity here
-                </p>
-              </CardContent>
-            </Card>
+            {isLoading ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-muted-foreground">Loading rounds...</p>
+                </CardContent>
+              </Card>
+            ) : rounds.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <Calendar className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+                  <p className="text-muted-foreground">No rounds played yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Start your first round to see your activity here
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {rounds.slice(0, 3).map((round) => {
+                  const scoreVsPar = round.total_score - 72;
+                  const scoreText = scoreVsPar === 0 ? 'E' : scoreVsPar > 0 ? `+${scoreVsPar}` : `${scoreVsPar}`;
+                  
+                  return (
+                    <Card key={round.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2">
+                              <h4 className="font-medium">{round.course_name || 'Golf Course'}</h4>
+                              <Badge variant="outline" className="text-xs">
+                                {scoreText}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(round.date_played).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-semibold">{round.total_score}</p>
+                            <p className="text-xs text-muted-foreground">{round.total_putts} putts</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Features Info */}
