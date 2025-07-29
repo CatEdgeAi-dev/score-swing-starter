@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -23,12 +23,13 @@ export const useRounds = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const loadRounds = async () => {
+  const loadRounds = useCallback(async () => {
     if (!user) {
       setRounds([]);
       return;
     }
 
+    console.log('Loading rounds for user:', user.id);
     setLoading(true);
     try {
       const { data: roundsData, error } = await supabase
@@ -41,19 +42,23 @@ export const useRounds = () => {
         .order('date_played', { ascending: false });
 
       if (error) throw error;
+      console.log('Rounds loaded successfully:', roundsData?.length || 0);
       setRounds(roundsData || []);
     } catch (error: any) {
       console.error('Error fetching rounds:', error);
-      toast({
-        variant: "destructive",
-        title: "Error loading rounds",
-        description: error.message || "Failed to load round history.",
-      });
+      // Only show toast for real errors, not network issues during development
+      if (!error.message?.includes('Failed to fetch')) {
+        toast({
+          variant: "destructive",
+          title: "Error loading rounds",
+          description: error.message || "Failed to load round history.",
+        });
+      }
       setRounds([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
 
   // Load rounds when user changes
   useEffect(() => {
@@ -63,7 +68,7 @@ export const useRounds = () => {
       setRounds([]);
       setLoading(false);
     }
-  }, [user?.id]); // Only depend on user.id to avoid infinite loops
+  }, [user?.id, loadRounds]); // Include loadRounds in dependencies
 
   const saveRound = async (
     holes: Record<number, HoleData>,
