@@ -146,9 +146,65 @@ Shared from Golf Scorecard App`;
     }
   };
 
+  const fetchRounds = async (): Promise<Round[]> => {
+    if (!user) return [];
+
+    try {
+      const { data: rounds, error } = await supabase
+        .from('rounds')
+        .select(`
+          *,
+          holes(*)
+        `)
+        .eq('user_id', user.id)
+        .order('date_played', { ascending: false });
+
+      if (error) throw error;
+      return rounds || [];
+    } catch (error: any) {
+      console.error('Error fetching rounds:', error);
+      toast({
+        variant: "destructive",
+        title: "Error loading rounds",
+        description: error.message || "Failed to load round history.",
+      });
+      return [];
+    }
+  };
+
+  const fetchRoundDetails = async (roundId: string): Promise<any | null> => {
+    if (!user) return null;
+
+    try {
+      const { data: round, error } = await supabase
+        .from('rounds')
+        .select(`
+          *,
+          holes(*),
+          flights(name),
+          flight_players(guest_name)
+        `)
+        .eq('id', roundId)
+        .single();
+
+      if (error) throw error;
+      return round;
+    } catch (error: any) {
+      console.error('Error fetching round details:', error);
+      toast({
+        variant: "destructive",
+        title: "Error loading round details",
+        description: error.message || "Failed to load round details.",
+      });
+      return null;
+    }
+  };
+
   return {
     saveRound,
     shareRound,
+    fetchRounds,
+    fetchRoundDetails,
     loading,
   };
 };
