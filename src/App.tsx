@@ -11,6 +11,7 @@ import RoundSelection from "./pages/RoundSelection";
 import Scorecard from "./pages/Scorecard";
 import RoundHistory from "./pages/RoundHistory";
 import Stats from "./pages/Stats";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/scorecard" element={<Scorecard />} />
               <Route path="/history" element={<RoundHistory />} />
               <Route path="/stats" element={<Stats />} />
+              <Route path="/profile" element={<Profile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

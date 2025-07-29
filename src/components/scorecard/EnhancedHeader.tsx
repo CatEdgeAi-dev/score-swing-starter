@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useNavigate } from 'react-router-dom';
 import { 
   Calendar, 
   MapPin, 
@@ -15,7 +16,9 @@ import {
   CloudRain, 
   Snowflake,
   Edit3,
-  CheckCircle
+  CheckCircle,
+  ArrowLeft,
+  RotateCcw
 } from 'lucide-react';
 
 interface EnhancedHeaderProps {
@@ -26,6 +29,7 @@ interface EnhancedHeaderProps {
   totalHoles: number;
   onCourseNameChange: (name: string) => void;
   onWeatherChange: (weather: string) => void;
+  onNewRound?: () => void;
 }
 
 const weatherOptions = [
@@ -42,8 +46,10 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
   currentHole,
   totalHoles,
   onCourseNameChange,
-  onWeatherChange
+  onWeatherChange,
+  onNewRound
 }) => {
+  const navigate = useNavigate();
   const [isEditingCourse, setIsEditingCourse] = useState(false);
   const [tempCourseName, setTempCourseName] = useState(courseName);
   const [isWeatherDialogOpen, setIsWeatherDialogOpen] = useState(false);
@@ -73,6 +79,33 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
   return (
     <Card className="w-full mb-4">
       <CardContent className="p-4 space-y-4">
+        {/* Navigation and actions header */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/rounds')}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Rounds
+          </Button>
+          
+          {onNewRound && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onNewRound}
+              className="gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              New Round
+            </Button>
+          )}
+        </div>
+        
+        <Separator />
+        
         {/* Course Name */}
         <div className="flex items-center justify-between">
           {isEditingCourse ? (

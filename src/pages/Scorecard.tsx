@@ -39,6 +39,7 @@ const ScorecardContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetType, setResetType] = useState<'hole' | 'round'>('hole');
+  const [showNewRoundDialog, setShowNewRoundDialog] = useState(false);
 
   // Current date
   const currentDate = isFlightMode 
@@ -130,6 +131,22 @@ const ScorecardContent = () => {
   const handleResetRound = () => {
     setResetType('round');
     setShowResetDialog(true);
+  };
+
+  const handleNewRound = () => {
+    setShowNewRoundDialog(true);
+  };
+
+  const confirmNewRound = () => {
+    resetScorecard();
+    setCurrentHole(1);
+    setCourseName('Golf Course');
+    setWeather('sunny');
+    setShowNewRoundDialog(false);
+    toast({
+      title: "New Round Started",
+      description: "Previous round data has been cleared",
+    });
   };
 
   const confirmReset = () => {
@@ -260,6 +277,7 @@ Shared from Golf Scorecard App`;
           totalHoles={18}
           onCourseNameChange={setCourseName}
           onWeatherChange={setWeather}
+          onNewRound={handleNewRound}
         />
 
         <AdvancedHoleNavigation
@@ -337,7 +355,7 @@ Shared from Golf Scorecard App`;
         currentHole={currentHole}
       />
 
-      {/* Confirmation Dialog */}
+      {/* Reset Confirmation Dialog */}
       <ConfirmationDialog
         open={showResetDialog}
         onOpenChange={setShowResetDialog}
@@ -350,6 +368,17 @@ Shared from Golf Scorecard App`;
         confirmLabel="Reset"
         onConfirm={confirmReset}
         variant="destructive"
+      />
+
+      {/* New Round Confirmation Dialog */}
+      <ConfirmationDialog
+        open={showNewRoundDialog}
+        onOpenChange={setShowNewRoundDialog}
+        title="Start New Round?"
+        description="This will clear all current round data and start fresh. Make sure to save your current round first if you want to keep it."
+        confirmLabel="Start New Round"
+        variant="destructive"
+        onConfirm={confirmNewRound}
       />
       
       <BottomTabs />
