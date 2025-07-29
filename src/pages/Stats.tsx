@@ -58,18 +58,24 @@ const Stats: React.FC = () => {
   useEffect(() => {
     const loadRounds = async () => {
       setLoading(true);
-      const roundData = await fetchRounds();
-      // Transform the data to match our interface
-      const transformedRounds = roundData.map(round => ({
-        ...round,
-        holes: (round as any).holes || []
-      }));
-      setRounds(transformedRounds as RoundData[]);
-      setLoading(false);
+      try {
+        const roundData = await fetchRounds();
+        // Transform the data to match our interface
+        const transformedRounds = roundData.map(round => ({
+          ...round,
+          holes: (round as any).holes || []
+        }));
+        setRounds(transformedRounds as RoundData[]);
+      } catch (error) {
+        console.error('Error loading rounds:', error);
+        setRounds([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadRounds();
-  }, [fetchRounds]);
+  }, []); // Remove fetchRounds from dependencies to prevent infinite loop
 
   if (loading) {
     return (
