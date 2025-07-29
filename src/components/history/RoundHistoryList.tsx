@@ -72,12 +72,6 @@ const RoundHistoryCard: React.FC<RoundHistoryCardProps> = ({ round, onViewDetail
                 <Calendar className="h-3 w-3" />
                 <span>{round.datePlayedInfo}</span>
               </div>
-              {round.isFlightRound && (
-                <div className="flex items-center space-x-1">
-                  <Users className="h-3 w-3" />
-                  <span>{round.flightName}</span>
-                </div>
-              )}
             </div>
           </div>
           
@@ -93,16 +87,12 @@ const RoundHistoryCard: React.FC<RoundHistoryCardProps> = ({ round, onViewDetail
       
       <CardContent className="pt-0">
         <div className="space-y-3">
-          {/* Player name display for both solo and flight rounds */}
-          {round.playerName && (
+          {/* Flight player information */}
+          {round.isFlightRound && (
             <div className="flex items-center space-x-2">
-              <User className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">{round.playerName}</span>
-              {round.isFlightRound && (
-                <Badge variant="outline" className="text-xs">
-                  Flight: {round.flightName}
-                </Badge>
-              )}
+              <span className="text-xs text-muted-foreground">in {round.flightName}</span>
             </div>
           )}
           
@@ -124,8 +114,8 @@ const RoundHistoryCard: React.FC<RoundHistoryCardProps> = ({ round, onViewDetail
           <Separator />
           
           <div className="flex items-center justify-between">
-            <Badge variant={round.isFlightRound ? "default" : "secondary"}>
-              {round.isFlightRound ? "Flight Round" : "Solo Round"}
+            <Badge variant={round.isFlightRound ? "destructive" : "secondary"}>
+              {round.isFlightRound ? "Flight" : "Solo Round"}
             </Badge>
             
             <Button 

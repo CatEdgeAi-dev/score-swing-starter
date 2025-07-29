@@ -26,18 +26,7 @@ export const SaveRoundDialog: React.FC<SaveRoundDialogProps> = ({ children }) =>
   const navigate = useNavigate();
 
   const handleSave = async () => {
-    // For now, since flights are in-memory only, we'll save rounds as solo rounds
-    // but include flight info in the course name or handle differently
-    let finalCourseName = courseName;
-    
-    if (isFlightMode && currentFlight) {
-      // Include flight info in course name for now
-      finalCourseName = courseName ? 
-        `${courseName} (Flight: ${currentFlight.name})` : 
-        `${currentFlight.courseName} (Flight: ${currentFlight.name})`;
-    }
-    
-    const savedRound = await saveRound(holes, finalCourseName || undefined);
+    const savedRound = await saveRound(holes, courseName || undefined);
     
     if (savedRound) {
       setShowStats(true); // Show stats instead of closing immediately
