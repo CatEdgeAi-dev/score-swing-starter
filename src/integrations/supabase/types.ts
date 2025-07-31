@@ -139,20 +139,29 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          handicap_proof_url: string | null
+          handicap_updated_at: string | null
           id: string
           updated_at: string
+          whs_index: number | null
         }
         Insert: {
           created_at?: string
           display_name?: string | null
+          handicap_proof_url?: string | null
+          handicap_updated_at?: string | null
           id: string
           updated_at?: string
+          whs_index?: number | null
         }
         Update: {
           created_at?: string
           display_name?: string | null
+          handicap_proof_url?: string | null
+          handicap_updated_at?: string | null
           id?: string
           updated_at?: string
+          whs_index?: number | null
         }
         Relationships: []
       }
