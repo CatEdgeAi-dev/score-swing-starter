@@ -8,10 +8,46 @@ import { Separator } from '@/components/ui/separator';
 import { User, Mail, Calendar, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { FlightManagementPanel } from '@/components/flight/FlightManagementPanel';
 import { useFlightContext } from '@/contexts/FlightContext';
+import { HandicapSection } from '@/components/profile/HandicapSection';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
 
 const ProfileContent: React.FC = () => {
   const { user, signOut } = useAuth();
   const { isFlightMode } = useFlightContext();
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, [user]);
+
+  const handleProfileUpdate = () => {
+    fetchUserProfile();
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -51,6 +87,12 @@ const ProfileContent: React.FC = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Handicap Section */}
+        <HandicapSection 
+          userProfile={userProfile} 
+          onUpdate={handleProfileUpdate}
+        />
 
         {/* Flight Management - only show if in flight mode */}
         {isFlightMode && (
