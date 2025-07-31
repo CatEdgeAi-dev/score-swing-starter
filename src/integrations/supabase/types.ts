@@ -182,8 +182,17 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age_range: string | null
+          availability: string[] | null
+          community_onboarding_completed: boolean | null
+          community_onboarding_step: number | null
+          competitive_play_interest: boolean | null
           created_at: string
           display_name: string | null
+          experience_level: string | null
+          favorite_course_type: string | null
+          golf_goals: string[] | null
+          group_play_interest: boolean | null
           handicap_proof_url: string | null
           handicap_rejection_reason: string | null
           handicap_reviewed_at: string | null
@@ -191,13 +200,35 @@ export type Database = {
           handicap_status: string | null
           handicap_submitted_at: string | null
           handicap_updated_at: string | null
+          hobbies: string[] | null
+          home_course: string | null
           id: string
+          location: string | null
+          mentoring_interest: string | null
+          occupation: string | null
+          open_to_matches: boolean | null
+          playing_frequency: string | null
+          preferred_tee_times: string[] | null
+          profile_completion_percentage: number | null
+          profile_visibility: string | null
+          show_contact_info: boolean | null
+          show_handicap: boolean | null
+          show_location: boolean | null
           updated_at: string
           whs_index: number | null
         }
         Insert: {
+          age_range?: string | null
+          availability?: string[] | null
+          community_onboarding_completed?: boolean | null
+          community_onboarding_step?: number | null
+          competitive_play_interest?: boolean | null
           created_at?: string
           display_name?: string | null
+          experience_level?: string | null
+          favorite_course_type?: string | null
+          golf_goals?: string[] | null
+          group_play_interest?: boolean | null
           handicap_proof_url?: string | null
           handicap_rejection_reason?: string | null
           handicap_reviewed_at?: string | null
@@ -205,13 +236,35 @@ export type Database = {
           handicap_status?: string | null
           handicap_submitted_at?: string | null
           handicap_updated_at?: string | null
+          hobbies?: string[] | null
+          home_course?: string | null
           id: string
+          location?: string | null
+          mentoring_interest?: string | null
+          occupation?: string | null
+          open_to_matches?: boolean | null
+          playing_frequency?: string | null
+          preferred_tee_times?: string[] | null
+          profile_completion_percentage?: number | null
+          profile_visibility?: string | null
+          show_contact_info?: boolean | null
+          show_handicap?: boolean | null
+          show_location?: boolean | null
           updated_at?: string
           whs_index?: number | null
         }
         Update: {
+          age_range?: string | null
+          availability?: string[] | null
+          community_onboarding_completed?: boolean | null
+          community_onboarding_step?: number | null
+          competitive_play_interest?: boolean | null
           created_at?: string
           display_name?: string | null
+          experience_level?: string | null
+          favorite_course_type?: string | null
+          golf_goals?: string[] | null
+          group_play_interest?: boolean | null
           handicap_proof_url?: string | null
           handicap_rejection_reason?: string | null
           handicap_reviewed_at?: string | null
@@ -219,7 +272,20 @@ export type Database = {
           handicap_status?: string | null
           handicap_submitted_at?: string | null
           handicap_updated_at?: string | null
+          hobbies?: string[] | null
+          home_course?: string | null
           id?: string
+          location?: string | null
+          mentoring_interest?: string | null
+          occupation?: string | null
+          open_to_matches?: boolean | null
+          playing_frequency?: string | null
+          preferred_tee_times?: string[] | null
+          profile_completion_percentage?: number | null
+          profile_visibility?: string | null
+          show_contact_info?: boolean | null
+          show_handicap?: boolean | null
+          show_location?: boolean | null
           updated_at?: string
           whs_index?: number | null
         }
@@ -317,6 +383,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_profile_completion: {
+        Args: { profile_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _user_id: string
