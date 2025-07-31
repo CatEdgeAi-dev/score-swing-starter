@@ -55,7 +55,7 @@ export const HandicapSection: React.FC<HandicapSectionProps> = ({ userProfile, o
     setIsUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-handicap-proof-${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/handicap-proof-${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
         .from('handicap-proofs')
