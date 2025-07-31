@@ -82,6 +82,51 @@ export type Database = {
         }
         Relationships: []
       }
+      handicap_submissions: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          proof_image_url: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+          whs_index: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          proof_image_url: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+          whs_index: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          proof_image_url?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+          whs_index?: number
+        }
+        Relationships: []
+      }
       holes: {
         Row: {
           created_at: string
@@ -140,6 +185,11 @@ export type Database = {
           created_at: string
           display_name: string | null
           handicap_proof_url: string | null
+          handicap_rejection_reason: string | null
+          handicap_reviewed_at: string | null
+          handicap_reviewed_by: string | null
+          handicap_status: string | null
+          handicap_submitted_at: string | null
           handicap_updated_at: string | null
           id: string
           updated_at: string
@@ -149,6 +199,11 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           handicap_proof_url?: string | null
+          handicap_rejection_reason?: string | null
+          handicap_reviewed_at?: string | null
+          handicap_reviewed_by?: string | null
+          handicap_status?: string | null
+          handicap_submitted_at?: string | null
           handicap_updated_at?: string | null
           id: string
           updated_at?: string
@@ -158,6 +213,11 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           handicap_proof_url?: string | null
+          handicap_rejection_reason?: string | null
+          handicap_reviewed_at?: string | null
+          handicap_reviewed_by?: string | null
+          handicap_status?: string | null
+          handicap_submitted_at?: string | null
           handicap_updated_at?: string | null
           id?: string
           updated_at?: string
@@ -231,11 +291,39 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
       user_can_access_flight: {
         Args: { flight_id: string }
         Returns: boolean
@@ -246,7 +334,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "admin" | "support"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -373,6 +461,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "admin", "support"],
+    },
   },
 } as const
