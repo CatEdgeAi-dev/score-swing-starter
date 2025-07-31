@@ -17,6 +17,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Player {
   id: string;
@@ -24,6 +25,7 @@ interface Player {
   isRegistered: boolean;
   userId?: string;
   email?: string;
+  handicap?: number;
 }
 
 interface FlightManagementProps {
@@ -86,32 +88,32 @@ export const FlightManagement: React.FC<FlightManagementProps> = ({
 
     setIsSearching(true);
     try {
-      // Simulate API call to search for registered users
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get current user to exclude them from search
+      const { data: { user } } = await supabase.auth.getUser();
       
-      // Mock search results
-      const mockResults: Player[] = [
-        {
-          id: 'user-1',
-          name: 'John Smith',
-          email: 'john@example.com',
-          isRegistered: true,
-          userId: 'user-1'
-        },
-        {
-          id: 'user-2',
-          name: 'Sarah Johnson',
-          email: 'sarah@example.com',
-          isRegistered: true,
-          userId: 'user-2'
-        }
-      ].filter(user => 
-        user.name.toLowerCase().includes(friendSearch.toLowerCase()) ||
-        user.email?.toLowerCase().includes(friendSearch.toLowerCase())
-      );
+      // Search for users by display name
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, display_name, whs_index')
+        .or(`display_name.ilike.%${friendSearch.trim()}%`)
+        .neq('id', user?.id) // Exclude current user
+        .limit(10);
 
-      setSearchResults(mockResults);
+      if (error) {
+        throw error;
+      }
+
+      const searchResults: Player[] = (profiles || []).map(profile => ({
+        id: profile.id,
+        name: profile.display_name || 'Unknown User',
+        isRegistered: true,
+        userId: profile.id,
+        handicap: profile.whs_index ? Number(profile.whs_index) : undefined
+      }));
+
+      setSearchResults(searchResults);
     } catch (error) {
+      console.error('Search error:', error);
       toast({
         variant: "destructive",
         title: "Search Failed",
@@ -235,11 +237,21 @@ export const FlightManagement: React.FC<FlightManagementProps> = ({
                           key={friend.id}
                           className="flex items-center justify-between p-3 border rounded-lg"
                         >
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-3">
                             <UserCheck className="h-4 w-4 text-green-600" />
-                            <div>
+                            <div className="flex-1">
                               <p className="font-medium">{friend.name}</p>
-                              <p className="text-xs text-muted-foreground">{friend.email}</p>
+                              <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                                <span>Registered User</span>
+                                {friend.handicap !== undefined && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="font-medium">
+                                      Handicap: {friend.handicap.toFixed(1)}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
                           <Button
@@ -250,6 +262,14 @@ export const FlightManagement: React.FC<FlightManagementProps> = ({
                           </Button>
                         </div>
                       ))}
+                    </div>
+                  )}
+                  
+                  {friendSearch.trim() && searchResults.length === 0 && !isSearching && (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <UserCheck className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No players found</p>
+                      <p className="text-xs">Try a different search term</p>
                     </div>
                   )}
                   
