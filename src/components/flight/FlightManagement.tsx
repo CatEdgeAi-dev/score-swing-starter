@@ -91,13 +91,23 @@ export const FlightManagement: React.FC<FlightManagementProps> = ({
       // Get current user to exclude them from search
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Search for users by display name
-      const { data: profiles, error } = await supabase
+      // Split search terms for more flexible name matching
+      const searchTerms = friendSearch.trim().toLowerCase().split(' ').filter(term => term.length > 0);
+      
+      // Build a more flexible search query that matches any word in any order
+      let query = supabase
         .from('profiles')
         .select('id, display_name, whs_index')
-        .or(`display_name.ilike.%${friendSearch.trim()}%`)
         .neq('id', user?.id) // Exclude current user
         .limit(10);
+
+      // Create OR conditions for each search term against display_name
+      if (searchTerms.length > 0) {
+        const searchConditions = searchTerms.map(term => `display_name.ilike.%${term}%`).join(',');
+        query = query.or(searchConditions);
+      }
+
+      const { data: profiles, error } = await query;
 
       if (error) {
         throw error;
