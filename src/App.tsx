@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import SharedRound from "./pages/SharedRound";
 import NotFound from "./pages/NotFound";
+import AdminHandicapReview from "./pages/AdminHandicapReview";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,11 @@ const App = () => (
               <Route path="/shared/:roundId" element={
                 <RouteLoadingWrapper>
                   <SharedRound />
+                </RouteLoadingWrapper>
+              } />
+              <Route path="/admin/handicap-review" element={
+                <RouteLoadingWrapper>
+                  <AdminHandicapReview />
                 </RouteLoadingWrapper>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

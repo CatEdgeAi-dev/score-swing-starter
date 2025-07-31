@@ -3,7 +3,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Settings } from 'lucide-react';
+import { LogOut, User, Settings, Shield } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 
 interface TopBarProps {
   title: string;
@@ -12,6 +14,24 @@ interface TopBarProps {
 export const TopBar: React.FC<TopBarProps> = ({ title }) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const checkAdminRole = async () => {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .single();
+        
+        setIsAdmin(!!data);
+      };
+      
+      checkAdminRole();
+    }
+  }, [user]);
 
   const getUserInitials = () => {
     if (!user?.email) return 'U';
@@ -24,6 +44,10 @@ export const TopBar: React.FC<TopBarProps> = ({ title }) => {
 
   const handleSettingsClick = () => {
     navigate('/settings');
+  };
+
+  const handleAdminClick = () => {
+    navigate('/admin/handicap-review');
   };
 
   return (
@@ -49,6 +73,12 @@ export const TopBar: React.FC<TopBarProps> = ({ title }) => {
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </DropdownMenuItem>
+          {isAdmin && (
+            <DropdownMenuItem onClick={handleAdminClick}>
+              <Shield className="mr-2 h-4 w-4" />
+              Admin Panel
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={signOut}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign Out
