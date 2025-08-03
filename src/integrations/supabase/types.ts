@@ -14,6 +14,249 @@ export type Database = {
   }
   public: {
     Tables: {
+      communities: {
+        Row: {
+          community_type: string
+          contact_email: string | null
+          course_affiliation: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          handicap_requirement_max: number | null
+          handicap_requirement_min: number | null
+          id: string
+          image_url: string | null
+          is_private: boolean
+          location: string | null
+          member_limit: number | null
+          name: string
+          rules_description: string | null
+          skill_level_requirement: string | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          community_type?: string
+          contact_email?: string | null
+          course_affiliation?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          handicap_requirement_max?: number | null
+          handicap_requirement_min?: number | null
+          id?: string
+          image_url?: string | null
+          is_private?: boolean
+          location?: string | null
+          member_limit?: number | null
+          name: string
+          rules_description?: string | null
+          skill_level_requirement?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          community_type?: string
+          contact_email?: string | null
+          course_affiliation?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          handicap_requirement_max?: number | null
+          handicap_requirement_min?: number | null
+          id?: string
+          image_url?: string | null
+          is_private?: boolean
+          location?: string | null
+          member_limit?: number | null
+          name?: string
+          rules_description?: string | null
+          skill_level_requirement?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      community_events: {
+        Row: {
+          community_id: string
+          course_name: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          entry_fee: number | null
+          event_type: string
+          format_description: string | null
+          handicap_requirement_max: number | null
+          handicap_requirement_min: number | null
+          id: string
+          max_participants: number | null
+          name: string
+          prize_description: string | null
+          registration_deadline: string | null
+          skill_level_requirement: string | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          course_name?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          entry_fee?: number | null
+          event_type?: string
+          format_description?: string | null
+          handicap_requirement_max?: number | null
+          handicap_requirement_min?: number | null
+          id?: string
+          max_participants?: number | null
+          name: string
+          prize_description?: string | null
+          registration_deadline?: string | null
+          skill_level_requirement?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          course_name?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          entry_fee?: number | null
+          event_type?: string
+          format_description?: string | null
+          handicap_requirement_max?: number | null
+          handicap_requirement_min?: number | null
+          id?: string
+          max_participants?: number | null
+          name?: string
+          prize_description?: string | null
+          registration_deadline?: string | null
+          skill_level_requirement?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          id: string
+          invited_by: string | null
+          joined_at: string
+          notes: string | null
+          role: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          notes?: string | null
+          role?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          notes?: string | null
+          role?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      community_rankings: {
+        Row: {
+          average_score: number | null
+          best_score: number | null
+          community_id: string
+          events_played: number | null
+          id: string
+          last_updated: string
+          period_end: string | null
+          period_start: string | null
+          points: number | null
+          rank_position: number
+          ranking_type: string
+          user_id: string
+        }
+        Insert: {
+          average_score?: number | null
+          best_score?: number | null
+          community_id: string
+          events_played?: number | null
+          id?: string
+          last_updated?: string
+          period_end?: string | null
+          period_start?: string | null
+          points?: number | null
+          rank_position: number
+          ranking_type?: string
+          user_id: string
+        }
+        Update: {
+          average_score?: number | null
+          best_score?: number | null
+          community_id?: string
+          events_played?: number | null
+          id?: string
+          last_updated?: string
+          period_end?: string | null
+          period_start?: string | null
+          points?: number | null
+          rank_position?: number
+          ranking_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      event_participants: {
+        Row: {
+          event_id: string
+          handicap_at_registration: number | null
+          id: string
+          notes: string | null
+          payment_status: string | null
+          registration_date: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          handicap_at_registration?: number | null
+          id?: string
+          notes?: string | null
+          payment_status?: string | null
+          registration_date?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          handicap_at_registration?: number | null
+          id?: string
+          notes?: string | null
+          payment_status?: string | null
+          registration_date?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       flight_players: {
         Row: {
           created_at: string
@@ -179,6 +422,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      match_preferences: {
+        Row: {
+          created_at: string
+          handicap_range_preference: string | null
+          id: string
+          is_active: boolean
+          max_travel_distance: number | null
+          notes: string | null
+          preferred_age_ranges: string[] | null
+          preferred_game_types: string[] | null
+          preferred_group_size: number | null
+          preferred_playing_times: string[] | null
+          preferred_skill_levels: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          handicap_range_preference?: string | null
+          id?: string
+          is_active?: boolean
+          max_travel_distance?: number | null
+          notes?: string | null
+          preferred_age_ranges?: string[] | null
+          preferred_game_types?: string[] | null
+          preferred_group_size?: number | null
+          preferred_playing_times?: string[] | null
+          preferred_skill_levels?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          handicap_range_preference?: string | null
+          id?: string
+          is_active?: boolean
+          max_travel_distance?: number | null
+          notes?: string | null
+          preferred_age_ranges?: string[] | null
+          preferred_game_types?: string[] | null
+          preferred_group_size?: number | null
+          preferred_playing_times?: string[] | null
+          preferred_skill_levels?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -356,6 +647,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

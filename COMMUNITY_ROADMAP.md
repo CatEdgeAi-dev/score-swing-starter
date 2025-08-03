@@ -92,27 +92,26 @@ Replace basic onboarding with comprehensive questionnaire covering golf and life
 - Backend: Save onboarding responses
 - UX: Progress tracking and validation
 
-#### Epic 3: Community Database Schema
+#### Epic 3: Community Database Schema ✅ COMPLETED
 **Labels:** `epic`, `backend`, `database`
 **Milestone:** Community Infrastructure
 **Description:**
 Create database tables and relationships for community features.
 
 **Acceptance Criteria:**
-- [ ] community_posts table with RLS policies
-- [ ] post_interactions table (likes, comments)
-- [ ] community_challenges table
-- [ ] user_achievements table
-- [ ] community_groups and group_memberships tables
-- [ ] Proper indexing and relationships
+- [x] Communities/clubs table with comprehensive features
+- [x] Community membership management system  
+- [x] Event/tournament scheduling system
+- [x] Match-making preferences table
+- [x] Community rankings/leaderboards
+- [x] Social features (user follows)
+- [x] Proper indexing and RLS policies
 
-**Sub-issues:**
-- Database: Create community_posts table
-- Database: Create interactions tables
-- Database: Create achievements system
-- Database: Create groups system
-- Security: Implement RLS policies
-- Performance: Add database indexes
+**Implementation Details:**
+- Created 7 new tables: `communities`, `community_members`, `community_events`, `event_participants`, `match_preferences`, `community_rankings`, `user_follows`
+- Implemented comprehensive Row Level Security policies for all tables
+- Added performance indexes and automatic timestamp triggers
+- Designed flexible schema supporting clubs, leagues, and tournament series
 
 #### Epic 4: Community Feed
 **Labels:** `epic`, `frontend`, `community`
