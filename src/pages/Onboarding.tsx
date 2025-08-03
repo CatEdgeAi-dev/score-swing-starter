@@ -51,6 +51,8 @@ interface ProfileData {
   group_play_interest: boolean;
   competitive_play_interest: boolean;
   mentoring_interest: string;
+  whs_index: string;
+  show_handicap: boolean;
 }
 
 const onboardingSteps: OnboardingStep[] = [
@@ -80,6 +82,13 @@ const onboardingSteps: OnboardingStep[] = [
     title: 'Lifestyle & Interests',
     description: 'Tell us about your lifestyle and availability',
     icon: MapPin,
+    type: 'form'
+  },
+  {
+    id: 'handicap',
+    title: 'Handicap Information',
+    description: 'Share your current handicap (optional)',
+    icon: BarChart3,
     type: 'form'
   },
   {
@@ -155,7 +164,9 @@ const Onboarding = () => {
     open_to_matches: true,
     group_play_interest: true,
     competitive_play_interest: false,
-    mentoring_interest: 'none'
+    mentoring_interest: 'none',
+    whs_index: '',
+    show_handicap: true
   });
 
   useEffect(() => {
@@ -206,14 +217,17 @@ const Onboarding = () => {
     setLoading(true);
     try {
       // Save profile data to Supabase
+      const profilePayload = {
+        id: user?.id,
+        ...profileData,
+        whs_index: profileData.whs_index ? parseFloat(profileData.whs_index) : null,
+        community_onboarding_completed: true,
+        community_onboarding_step: onboardingSteps.length
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          id: user?.id,
-          ...profileData,
-          community_onboarding_completed: true,
-          community_onboarding_step: onboardingSteps.length
-        });
+        .upsert(profilePayload);
 
       if (error) throw error;
 
@@ -401,6 +415,44 @@ const Onboarding = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        );
+
+      case 'handicap':
+        return (
+          <div className="space-y-4">
+            <div className="bg-muted/50 border rounded-lg p-4">
+              <p className="text-sm text-muted-foreground mb-2">
+                Your handicap helps other golfers understand your skill level and find suitable playing partners.
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="whs_index">WHS Handicap Index (optional)</Label>
+              <Input
+                id="whs_index"
+                type="number"
+                step="0.1"
+                value={profileData.whs_index}
+                onChange={(e) => setProfileData(prev => ({ ...prev, whs_index: e.target.value }))}
+                placeholder="e.g., 12.4"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter your official World Handicap System index if you have one
+              </p>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show_handicap">Show handicap to other players</Label>
+              <Checkbox
+                id="show_handicap"
+                checked={profileData.show_handicap}
+                onCheckedChange={(checked) => setProfileData(prev => ({ ...prev, show_handicap: checked as boolean }))}
+              />
+            </div>
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+              <p className="text-xs text-primary">
+                💡 You can always update your handicap later in your profile settings
+              </p>
             </div>
           </div>
         );
