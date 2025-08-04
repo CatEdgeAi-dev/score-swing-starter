@@ -77,6 +77,54 @@ export type Database = {
         }
         Relationships: []
       }
+      community_challenges: {
+        Row: {
+          challenge_type: string
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean
+          reward_description: string | null
+          start_date: string
+          target_metric: string
+          target_value: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          challenge_type?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean
+          reward_description?: string | null
+          start_date: string
+          target_metric: string
+          target_value?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          challenge_type?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          reward_description?: string | null
+          start_date?: string
+          target_metric?: string
+          target_value?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       community_events: {
         Row: {
           community_id: string
@@ -176,6 +224,45 @@ export type Database = {
           role?: string
           status?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      community_posts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          is_pinned: boolean
+          metadata: Json | null
+          post_type: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_pinned?: boolean
+          metadata?: Json | null
+          post_type?: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_pinned?: boolean
+          metadata?: Json | null
+          post_type?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
         }
         Relationships: []
       }
@@ -471,6 +558,33 @@ export type Database = {
         }
         Relationships: []
       }
+      post_interactions: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          interaction_type: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          interaction_type: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          interaction_type?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age_range: string | null
@@ -647,6 +761,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_achievements: {
+        Row: {
+          achievement_name: string
+          achievement_type: string
+          challenge_id: string | null
+          description: string | null
+          earned_at: string
+          id: string
+          is_featured: boolean
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          achievement_name: string
+          achievement_type: string
+          challenge_id?: string | null
+          description?: string | null
+          earned_at?: string
+          id?: string
+          is_featured?: boolean
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          achievement_name?: string
+          achievement_type?: string
+          challenge_id?: string | null
+          description?: string | null
+          earned_at?: string
+          id?: string
+          is_featured?: boolean
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_follows: {
         Row: {

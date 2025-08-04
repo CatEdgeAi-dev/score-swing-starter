@@ -18,6 +18,7 @@ import Scorecard from "./pages/Scorecard";
 import RoundHistory from "./pages/RoundHistory";
 import Stats from "./pages/Stats";
 import Profile from "./pages/Profile";
+import Community from "./pages/Community";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import SharedRound from "./pages/SharedRound";
@@ -75,6 +76,11 @@ const App = () => (
               <Route path="/profile" element={
                 <RouteLoadingWrapper>
                   <Profile />
+                </RouteLoadingWrapper>
+              } />
+              <Route path="/community" element={
+                <RouteLoadingWrapper>
+                  <Community />
                 </RouteLoadingWrapper>
               } />
               <Route path="/settings" element={
