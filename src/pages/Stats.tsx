@@ -34,6 +34,7 @@ import { LoadingSpinner } from '@/components/scorecard/LoadingSpinner';
 import { TopBar } from '@/components/navigation/TopBar';
 import { BottomTabs } from '@/components/navigation/BottomTabs';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { GlobalLeaderboard } from '@/components/leaderboards/GlobalLeaderboard';
 import { AchievementsBadges } from '@/components/achievements/AchievementsBadges';
 import { HandicapProgress } from '@/components/progress/HandicapProgress';
@@ -61,6 +62,15 @@ const StatsContent: React.FC = () => {
   const [rounds, setRounds] = useState<RoundData[]>([]);
   const [loading, setLoading] = useState(true);
   const { fetchRounds } = useRounds();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Handle deep linking for tabs
+  const activeTab = searchParams.get('tab') || 'stats';
+  
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
 
   useEffect(() => {
     const loadRounds = async () => {
@@ -109,15 +119,15 @@ const StatsContent: React.FC = () => {
               </p>
             </div>
 
-            <Tabs defaultValue="mystats" className="space-y-6">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="mystats">My Stats</TabsTrigger>
+                <TabsTrigger value="stats">My Stats</TabsTrigger>
                 <TabsTrigger value="leaderboards">Leaderboards</TabsTrigger>
                 <TabsTrigger value="achievements">Achievements</TabsTrigger>
                 <TabsTrigger value="challenges">Challenges</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="mystats" className="space-y-6">
+              <TabsContent value="stats" className="space-y-6">
                 <Card>
                   <CardContent className="p-8 text-center">
                     <BarChart3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
@@ -237,15 +247,15 @@ const StatsContent: React.FC = () => {
         </div>
 
         {/* Performance Hub Tabs */}
-        <Tabs defaultValue="mystats" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="mystats">My Stats</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="stats">My Stats</TabsTrigger>
             <TabsTrigger value="leaderboards">Leaderboards</TabsTrigger>
             <TabsTrigger value="achievements">Achievements</TabsTrigger>
             <TabsTrigger value="challenges">Challenges</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="mystats" className="space-y-6">
+          <TabsContent value="stats" className="space-y-6">
             {/* My Stats Content */}
             <Tabs defaultValue="progress" className="w-full">
               <TabsList className="grid w-full grid-cols-3">

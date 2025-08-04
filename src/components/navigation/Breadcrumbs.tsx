@@ -1,4 +1,4 @@
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, useSearchParams, Link } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
 import {
   Breadcrumb,
@@ -22,12 +22,22 @@ const breadcrumbConfig: BreadcrumbConfig = {
   '/rounds': { label: 'Rounds', path: '/rounds' },
   '/scorecard': { label: 'Scorecard', path: '/scorecard' },
   '/history': { label: 'History', path: '/history' },
-  '/stats': { label: 'Statistics', path: '/stats' },
+  '/performance': { label: 'Performance', path: '/performance' },
   '/profile': { label: 'Profile', path: '/profile' },
+  '/community': { label: 'Community', path: '/community' },
+  '/settings': { label: 'Settings', path: '/settings' },
+};
+
+const performanceTabLabels: Record<string, string> = {
+  'stats': 'My Stats',
+  'leaderboards': 'Leaderboards', 
+  'achievements': 'Achievements',
+  'challenges': 'Challenges'
 };
 
 export const Breadcrumbs: React.FC = () => {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const pathSegments = location.pathname.split('/').filter(Boolean);
   
   // Don't show breadcrumbs on home/login pages
@@ -52,8 +62,20 @@ export const Breadcrumbs: React.FC = () => {
       breadcrumbItems.push({
         label: currentConfig.label,
         path: location.pathname,
-        isLast: true
+        isLast: location.pathname !== '/performance'
       });
+      
+      // Add sub-section breadcrumb for performance tabs
+      if (location.pathname === '/performance') {
+        const activeTab = searchParams.get('tab') || 'stats';
+        if (performanceTabLabels[activeTab]) {
+          breadcrumbItems.push({
+            label: performanceTabLabels[activeTab],
+            path: `/performance?tab=${activeTab}`,
+            isLast: true
+          });
+        }
+      }
     }
   } else {
     breadcrumbItems[0].isLast = true;

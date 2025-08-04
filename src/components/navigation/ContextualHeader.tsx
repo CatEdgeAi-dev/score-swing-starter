@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,11 @@ import {
   Crown, 
   Calendar,
   MapPin,
-  Settings
+  Settings,
+  BarChart3,
+  Trophy,
+  Award,
+  Target
 } from 'lucide-react';
 import { useFlightContext } from '@/contexts/FlightContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +23,8 @@ interface ContextualHeaderProps {
 
 export const ContextualHeader: React.FC<ContextualHeaderProps> = ({ title }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { isFlightMode, currentFlight, currentPlayer } = useFlightContext();
 
@@ -87,6 +93,50 @@ export const ContextualHeader: React.FC<ContextualHeaderProps> = ({ title }) => 
             <Badge variant="outline" className="text-xs">
               Individual Play
             </Badge>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show performance section navigation
+  if (location.pathname === '/performance') {
+    const activeTab = searchParams.get('tab') || 'stats';
+    const quickActions = [
+      { label: 'My Stats', tab: 'stats', icon: BarChart3 },
+      { label: 'Leaderboards', tab: 'leaderboards', icon: Trophy },
+      { label: 'Achievements', tab: 'achievements', icon: Award },
+      { label: 'Challenges', tab: 'challenges', icon: Target }
+    ];
+
+    return (
+      <Card className="mx-4 mb-4 border-primary/20 bg-primary/5">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              <span className="font-semibold text-primary">Performance Hub</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              const isActive = activeTab === action.tab;
+              
+              return (
+                <Button
+                  key={action.tab}
+                  variant={isActive ? "default" : "ghost"}
+                  size="sm"
+                  className="justify-start gap-2 h-8"
+                  onClick={() => navigate(`/performance?tab=${action.tab}`)}
+                >
+                  <Icon className="h-3 w-3" />
+                  <span className="text-xs">{action.label}</span>
+                </Button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
