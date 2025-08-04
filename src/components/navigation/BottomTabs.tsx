@@ -6,7 +6,7 @@ const tabs = [
   { id: 'rounds', label: 'Rounds', icon: Play, path: '/rounds' },
   { id: 'scorecard', label: 'Scorecard', icon: ScrollText, path: '/scorecard' },
   { id: 'community', label: 'Community', icon: Users, path: '/community' },
-  { id: 'stats', label: 'Stats', icon: BarChart3, path: '/stats' },
+  { id: 'performance', label: 'Performance', icon: BarChart3, path: '/performance' },
   { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
 ];
 

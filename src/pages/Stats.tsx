@@ -34,6 +34,10 @@ import { LoadingSpinner } from '@/components/scorecard/LoadingSpinner';
 import { TopBar } from '@/components/navigation/TopBar';
 import { BottomTabs } from '@/components/navigation/BottomTabs';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { GlobalLeaderboard } from '@/components/leaderboards/GlobalLeaderboard';
+import { AchievementsBadges } from '@/components/achievements/AchievementsBadges';
+import { HandicapProgress } from '@/components/progress/HandicapProgress';
+import { ChallengeTracker } from '@/components/challenges/ChallengeTracker';
 
 interface RoundData {
   id: string;
@@ -83,7 +87,7 @@ const StatsContent: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <TopBar title="Statistics" />
+        <TopBar title="Performance" />
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner />
         </div>
@@ -95,19 +99,48 @@ const StatsContent: React.FC = () => {
   if (rounds.length === 0) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <TopBar title="Statistics" />
-        <div className="flex-1 p-4">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold text-center mb-8">Golf Statistics</h1>
-            <Card>
-              <CardContent className="p-8 text-center">
-                <BarChart3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-xl font-semibold mb-2">No Statistics Available</h3>
-                <p className="text-muted-foreground">
-                  Play some rounds to see your golf statistics and performance analytics.
-                </p>
-              </CardContent>
-            </Card>
+        <TopBar title="Performance" />
+        <div className="flex-1 p-4 pb-24">
+          <div className="max-w-6xl mx-auto space-y-6">
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl font-bold">Performance Hub</h1>
+              <p className="text-muted-foreground">
+                Track your progress, compete with others, and unlock achievements
+              </p>
+            </div>
+
+            <Tabs defaultValue="mystats" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="mystats">My Stats</TabsTrigger>
+                <TabsTrigger value="leaderboards">Leaderboards</TabsTrigger>
+                <TabsTrigger value="achievements">Achievements</TabsTrigger>
+                <TabsTrigger value="challenges">Challenges</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="mystats" className="space-y-6">
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <BarChart3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                    <h3 className="text-xl font-semibold mb-2">No Statistics Available</h3>
+                    <p className="text-muted-foreground">
+                      Play some rounds to see your golf statistics and performance analytics.
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="leaderboards" className="space-y-6">
+                <GlobalLeaderboard />
+              </TabsContent>
+
+              <TabsContent value="achievements" className="space-y-6">
+                <AchievementsBadges />
+              </TabsContent>
+
+              <TabsContent value="challenges" className="space-y-6">
+                <ChallengeTracker />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
         <BottomTabs />
@@ -156,13 +189,13 @@ const StatsContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <TopBar title="Statistics" />
+      <TopBar title="Performance" />
       
       <div className="flex-1 p-4 pb-24 space-y-6">
         <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Golf Statistics</h1>
+          <h1 className="text-3xl font-bold">Performance Hub</h1>
           <p className="text-muted-foreground">
             Performance analytics from {totalRounds} round{totalRounds !== 1 ? 's' : ''}
           </p>
@@ -203,13 +236,23 @@ const StatsContent: React.FC = () => {
           </Card>
         </div>
 
-        {/* Detailed Analytics */}
-        <Tabs defaultValue="progress" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="progress">Score Progress</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="trends">Score Trends</TabsTrigger>
+        {/* Performance Hub Tabs */}
+        <Tabs defaultValue="mystats" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="mystats">My Stats</TabsTrigger>
+            <TabsTrigger value="leaderboards">Leaderboards</TabsTrigger>
+            <TabsTrigger value="achievements">Achievements</TabsTrigger>
+            <TabsTrigger value="challenges">Challenges</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="mystats" className="space-y-6">
+            {/* My Stats Content */}
+            <Tabs defaultValue="progress" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="progress">Score Progress</TabsTrigger>
+                <TabsTrigger value="performance">Performance</TabsTrigger>
+                <TabsTrigger value="trends">Score Trends</TabsTrigger>
+              </TabsList>
           
           <TabsContent value="progress" className="space-y-4">
             <Card>
@@ -340,6 +383,20 @@ const StatsContent: React.FC = () => {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
+          </TabsContent>
+            </Tabs>
+          </TabsContent>
+          
+          <TabsContent value="leaderboards" className="space-y-6">
+            <GlobalLeaderboard />
+          </TabsContent>
+
+          <TabsContent value="achievements" className="space-y-6">
+            <AchievementsBadges />
+          </TabsContent>
+
+          <TabsContent value="challenges" className="space-y-6">
+            <ChallengeTracker />
           </TabsContent>
         </Tabs>
         </div>
