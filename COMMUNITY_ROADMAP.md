@@ -136,18 +136,26 @@ Main community page with feed, posting, and interaction capabilities.
 - Created supporting components: CommunityHeader, ActiveChallenges, TrendingTopics
 - Integrated community navigation in bottom tabs
 
-#### Epic 5: Leaderboard System
+#### Epic 5: Leaderboard System ✅ COMPLETED
 **Labels:** `epic`, `frontend`, `gamification`
 **Milestone:** Leaderboards & Gamification
 **Description:**
 Multiple leaderboards and achievement system for user engagement.
 
 **Acceptance Criteria:**
-- [ ] Global and course-specific leaderboards
-- [ ] Handicap improvement tracking
-- [ ] Achievement badge system
-- [ ] Monthly challenges
-- [ ] Progress visualization
+- [x] Global and course-specific leaderboards
+- [x] Handicap improvement tracking
+- [x] Achievement badge system
+- [x] Monthly challenges
+- [x] Progress visualization
+
+**Implementation Details:**
+- Created comprehensive Leaderboards page with tabbed interface
+- Built GlobalLeaderboard component with ranking display and trophy icons
+- Implemented AchievementsBadges component with categorized achievement types
+- Created HandicapProgress component with trend tracking and charts
+- Built ChallengeTracker component with progress bars and time tracking
+- Added leaderboards route and navigation integration
 
 **Sub-issues:**
 - Backend: Leaderboard calculation logic
