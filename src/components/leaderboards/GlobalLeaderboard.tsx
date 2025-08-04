@@ -35,7 +35,7 @@ export const GlobalLeaderboard = () => {
         .from("community_rankings")
         .select(`
           *,
-          profiles:user_id (
+          profiles!community_rankings_user_id_fkey (
             display_name,
             whs_index
           )
