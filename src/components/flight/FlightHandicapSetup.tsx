@@ -76,8 +76,8 @@ export const FlightHandicapSetup: React.FC = () => {
         }
       });
       
-      // Update state with database values
-      setHandicaps(prev => ({ ...prev, ...handicapData }));
+      // Update state with database values - completely replace for consistency
+      setHandicaps(handicapData);
     } catch (error) {
       console.error('Error loading flight handicaps:', error);
     }
