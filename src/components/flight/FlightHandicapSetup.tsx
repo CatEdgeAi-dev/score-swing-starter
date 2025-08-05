@@ -19,12 +19,12 @@ export const FlightHandicapSetup: React.FC = () => {
 
   useEffect(() => {
     if (currentFlight && user) {
-      // Load existing handicaps from database
+      // Load existing handicaps from database only once when flight changes
       loadFlightHandicaps();
       // Load user's current handicap from profile
       loadUserHandicap();
     }
-  }, [currentFlight, user]);
+  }, [currentFlight?.id, user?.id]); // Only depend on IDs to prevent infinite loops
 
   // Set up real-time subscription for handicap updates
   useEffect(() => {
@@ -80,8 +80,22 @@ export const FlightHandicapSetup: React.FC = () => {
           handicapData[player.id] = player.handicap.toString();
         }
       });
-      setHandicaps(handicapData);
-      console.log('Set handicaps state:', handicapData);
+      
+      // Only update state if there are actual changes to prevent overwriting user input
+      setHandicaps(prev => {
+        const hasChanges = Object.keys(handicapData).some(key => 
+          prev[key] !== handicapData[key]
+        ) || Object.keys(prev).some(key => 
+          handicapData[key] === undefined && prev[key] !== undefined
+        );
+        
+        if (hasChanges) {
+          console.log('Updating handicaps state:', handicapData);
+          return { ...prev, ...handicapData };
+        }
+        
+        return prev;
+      });
     } catch (error) {
       console.error('Error loading flight handicaps:', error);
     }
@@ -95,16 +109,17 @@ export const FlightHandicapSetup: React.FC = () => {
         .from('profiles')
         .select('whs_index')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
       if (data?.whs_index) {
         const currentUserPlayer = currentFlight?.players.find(p => p.userId === user.id);
         if (currentUserPlayer) {
+          // Only set if not already set to avoid overwriting user input
           setHandicaps(prev => ({
             ...prev,
-            [currentUserPlayer.id]: data.whs_index.toString()
+            [currentUserPlayer.id]: prev[currentUserPlayer.id] || data.whs_index.toString()
           }));
         }
       }
