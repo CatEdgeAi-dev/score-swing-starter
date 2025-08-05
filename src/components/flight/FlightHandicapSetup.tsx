@@ -30,25 +30,32 @@ export const FlightHandicapSetup: React.FC = () => {
   useEffect(() => {
     if (!currentFlight) return;
 
+    console.log('🔄 Setting up real-time subscription for flight:', currentFlight.id);
+
     const channel = supabase
-      .channel('flight-handicaps')
+      .channel(`flight-handicaps-${currentFlight.id}`)
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'flight_players',
           filter: `flight_id=eq.${currentFlight.id}`,
         },
         (payload) => {
-          console.log('Real-time handicap update received:', payload);
+          console.log('🔄 Real-time handicap update received:', payload);
+          console.log('🔄 Event type:', payload.eventType);
+          console.log('🔄 Updated record:', payload.new);
           // Reload all handicaps to ensure all players see the latest state
           loadFlightHandicaps();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🔄 Real-time subscription status:', status);
+      });
 
     return () => {
+      console.log('🔄 Cleaning up real-time subscription for flight:', currentFlight.id);
       supabase.removeChannel(channel);
     };
   }, [currentFlight]);
@@ -105,8 +112,12 @@ export const FlightHandicapSetup: React.FC = () => {
           if (dbPlayer.user_id && p.userId) {
             return p.userId === dbPlayer.user_id;
           }
-          // For guest players, we need to match by position since guest_name might be different
-          return false; // This is where the issue might be!
+          // For guest players, match by name or guest_name
+          if (!dbPlayer.user_id && !p.userId) {
+            return p.name === dbPlayer.guest_name || 
+                   (p.name && dbPlayer.guest_name && p.name.toLowerCase() === dbPlayer.guest_name.toLowerCase());
+          }
+          return false;
         });
         
         console.log(`🎯 Matching attempt for DB record ${index + 1}:`, {
@@ -168,27 +179,35 @@ export const FlightHandicapSetup: React.FC = () => {
     if (handicap === '' || /^\d{0,2}(\.\d{0,1})?$/.test(handicap)) {
       setHandicaps(prev => ({ ...prev, [playerId]: handicap }));
       
-      // Find the player to get their userId
+      // Find the player (works for both registered and guest players)
       const player = currentFlight.players.find(p => p.id === playerId);
-      if (!player?.userId) {
-        console.error('Player userId not found for player ID:', playerId);
+      if (!player) {
+        console.error('Player not found for player ID:', playerId);
         return;
       }
       
-      console.log('Saving handicap for player:', player.name, 'userId:', player.userId, 'value:', handicap);
+      console.log('💾 Saving handicap for player:', player.name, 'userId:', player.userId, 'value:', handicap);
       
       // Save to database immediately using the correct user_id
       try {
         const handicapValue = handicap === '' ? null : parseFloat(handicap);
         
-        const { error } = await supabase
-          .from('flight_players')
-          .update({ handicap: handicapValue })
-          .eq('flight_id', currentFlight.id)
-          .eq('user_id', player.userId); // Use the correct user_id
+        // For registered players, use user_id. For guests, use the player ID directly
+        const updateQuery = player.userId 
+          ? supabase
+              .from('flight_players')
+              .update({ handicap: handicapValue })
+              .eq('flight_id', currentFlight.id)
+              .eq('user_id', player.userId)
+          : supabase
+              .from('flight_players')
+              .update({ handicap: handicapValue })
+              .eq('id', playerId);
+
+        const { error } = await updateQuery;
 
         if (error) throw error;
-        console.log('Handicap saved successfully for', player.name);
+        console.log('✅ Handicap saved successfully for', player.name);
       } catch (error) {
         console.error('Error saving handicap:', error);
         toast({
