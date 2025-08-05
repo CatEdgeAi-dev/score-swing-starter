@@ -93,6 +93,14 @@ export const FlightHandicapSetup: React.FC = () => {
         guestPlayers: players?.filter(p => p.guest_name).length || 0,
         playersWithHandicaps: players?.filter(p => p.handicap !== null).length || 0
       });
+      console.log('🔍 Database records detailed:', players?.map((p, i) => ({
+        index: i,
+        id: p.id,
+        user_id: p.user_id,
+        guest_name: p.guest_name,
+        handicap: p.handicap,
+        player_order: p.player_order
+      })));
 
       const handicapData: { [playerId: string]: string } = {};
       
