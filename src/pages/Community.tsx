@@ -8,6 +8,9 @@ import { PostFeed } from '@/components/community/PostFeed';
 import { CommunityHeader } from '@/components/community/CommunityHeader';
 import { ActiveChallenges } from '@/components/community/ActiveChallenges';
 import { TrendingTopics } from '@/components/community/TrendingTopics';
+import { TopBar } from '@/components/navigation/TopBar';
+import { BottomTabs } from '@/components/navigation/BottomTabs';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { 
   Users, 
   Trophy, 
@@ -18,45 +21,55 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-const Community = () => {
+const CommunityContent = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('feed');
 
   if (!user) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="p-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Join the Community</h2>
-            <p className="text-muted-foreground">Please log in to access the golf community features.</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background flex flex-col">
+        <TopBar title="Community" />
+        <div className="flex-1 p-4 pb-24">
+          <div className="max-w-4xl mx-auto">
+            <Card>
+              <CardContent className="p-6 text-center">
+                <h2 className="text-xl font-semibold mb-2">Join the Community</h2>
+                <p className="text-muted-foreground">Please log in to access the golf community features.</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <BottomTabs />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <CommunityHeader />
+    <div className="min-h-screen bg-background flex flex-col">
+      <TopBar title="Community" />
       
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-3 space-y-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="feed" className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Feed
-              </TabsTrigger>
-              <TabsTrigger value="challenges" className="flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                Challenges
-              </TabsTrigger>
-              <TabsTrigger value="events" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Events
-              </TabsTrigger>
-            </TabsList>
+      <div className="flex-1 p-4 pb-24 overflow-y-auto">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <CommunityHeader />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Main Content */}
+            <div className="lg:col-span-3 space-y-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="feed" className="flex items-center gap-2 text-xs sm:text-sm">
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="hidden sm:inline">Feed</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="challenges" className="flex items-center gap-2 text-xs sm:text-sm">
+                    <Target className="h-4 w-4" />
+                    <span className="hidden sm:inline">Challenges</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="events" className="flex items-center gap-2 text-xs sm:text-sm">
+                    <Calendar className="h-4 w-4" />
+                    <span className="hidden sm:inline">Events</span>
+                  </TabsTrigger>
+                </TabsList>
 
             <TabsContent value="feed" className="space-y-6">
               <PostCreation />
@@ -82,12 +95,12 @@ const Community = () => {
                 </CardContent>
               </Card>
             </TabsContent>
-          </Tabs>
-        </div>
+              </Tabs>
+            </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          <TrendingTopics />
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <TrendingTopics />
           
           <Card>
             <CardHeader>
@@ -137,9 +150,21 @@ const Community = () => {
               </div>
             </CardContent>
           </Card>
+            </div>
+          </div>
         </div>
       </div>
+      
+      <BottomTabs />
     </div>
+  );
+};
+
+const Community = () => {
+  return (
+    <ProtectedRoute>
+      <CommunityContent />
+    </ProtectedRoute>
   );
 };
 

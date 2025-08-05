@@ -57,36 +57,36 @@ export const PostCreation = ({ onPostCreated }: PostCreationProps) => {
   if (!user) return null;
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardContent className="p-4">
         <div className="flex gap-3">
-          <Avatar className="h-10 w-10">
+          <Avatar className="h-10 w-10 flex-shrink-0">
             <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} />
             <AvatarFallback>{user.email?.[0]?.toUpperCase()}</AvatarFallback>
           </Avatar>
           
-          <div className="flex-1 space-y-3">
-            <div className="flex gap-2 mb-2">
+          <div className="flex-1 min-w-0 space-y-3">
+            <div className="flex flex-wrap gap-2 mb-2">
               <Badge 
                 variant={postType === 'text' ? 'default' : 'outline'}
                 className="cursor-pointer text-xs"
                 onClick={() => setPostType('text')}
               >
-                💬 Share Thoughts
+                💬 <span className="hidden sm:inline">Share Thoughts</span><span className="sm:hidden">Thoughts</span>
               </Badge>
               <Badge 
                 variant={postType === 'achievement' ? 'default' : 'outline'}
                 className="cursor-pointer text-xs"
                 onClick={() => setPostType('achievement')}
               >
-                🏆 Achievement
+                🏆 <span className="hidden sm:inline">Achievement</span><span className="sm:hidden">Achievement</span>
               </Badge>
               <Badge 
                 variant={postType === 'round_share' ? 'default' : 'outline'}
                 className="cursor-pointer text-xs"
                 onClick={() => setPostType('round_share')}
               >
-                ⛳ Round Share
+                ⛳ <span className="hidden sm:inline">Round Share</span><span className="sm:hidden">Round</span>
               </Badge>
             </div>
 
@@ -98,22 +98,22 @@ export const PostCreation = ({ onPostCreated }: PostCreationProps) => {
               }
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="resize-none border-none shadow-none p-0 text-base placeholder:text-muted-foreground"
+              className="resize-none border-none shadow-none p-0 text-base placeholder:text-muted-foreground min-h-[60px]"
               rows={3}
             />
 
-            <div className="flex items-center justify-between pt-2 border-t">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between pt-2 border-t gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 <Button variant="ghost" size="sm" className="h-8 px-2">
                   <Image className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-8 px-2">
+                <Button variant="ghost" size="sm" className="h-8 px-2 hidden sm:flex">
                   <Trophy className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-8 px-2">
+                <Button variant="ghost" size="sm" className="h-8 px-2 hidden sm:flex">
                   <MapPin className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-8 px-2">
+                <Button variant="ghost" size="sm" className="h-8 px-2 hidden sm:flex">
                   <Smile className="h-4 w-4" />
                 </Button>
               </div>
@@ -122,10 +122,11 @@ export const PostCreation = ({ onPostCreated }: PostCreationProps) => {
                 onClick={handleSubmit}
                 disabled={!content.trim() || isSubmitting}
                 size="sm"
-                className="gap-2"
+                className="gap-2 flex-shrink-0"
               >
                 <Send className="h-4 w-4" />
-                {isSubmitting ? 'Posting...' : 'Post'}
+                <span className="hidden sm:inline">{isSubmitting ? 'Posting...' : 'Post'}</span>
+                <span className="sm:hidden">{isSubmitting ? '...' : 'Post'}</span>
               </Button>
             </div>
           </div>

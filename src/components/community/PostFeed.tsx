@@ -219,29 +219,34 @@ export const PostFeed = () => {
   return (
     <div className="space-y-4">
       {posts.map((post) => (
-        <Card key={post.id}>
+        <Card key={post.id} className="overflow-hidden">
           <CardContent className="p-4">
             <div className="flex gap-3">
-              <Avatar className="h-10 w-10">
+              <Avatar className="h-10 w-10 flex-shrink-0">
                 <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user_id}`} />
                 <AvatarFallback>
                   {post.profiles?.display_name?.[0]?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between mb-2 gap-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="font-semibold text-sm truncate">
                       {post.profiles?.display_name || 'Golf Enthusiast'}
                     </span>
-                    {getPostTypeIcon(post.post_type)}
-                    {getPostTypeBadge(post.post_type)}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {getPostTypeIcon(post.post_type)}
+                      {getPostTypeBadge(post.post_type)}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-muted-foreground flex-shrink-0">
                     <Clock className="h-3 w-3" />
-                    <span className="text-xs">
+                    <span className="text-xs hidden sm:inline">
                       {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                    </span>
+                    <span className="text-xs sm:hidden">
+                      {formatDistanceToNow(new Date(post.created_at), { addSuffix: true }).replace(' ago', '')}
                     </span>
                     <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                       <MoreHorizontal className="h-3 w-3" />
@@ -249,29 +254,31 @@ export const PostFeed = () => {
                   </div>
                 </div>
                 
-                <p className="text-sm mb-3 whitespace-pre-wrap">
-                  {post.content}
-                </p>
+                <div className="text-sm mb-3 break-words">
+                  <p className="whitespace-pre-wrap overflow-wrap-anywhere">
+                    {post.content}
+                  </p>
+                </div>
                 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 sm:gap-4">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`h-8 gap-2 ${post.hasLiked ? 'text-red-500' : ''}`}
+                    className={`h-8 gap-1 sm:gap-2 ${post.hasLiked ? 'text-red-500' : ''}`}
                     onClick={() => handleLike(post.id)}
                   >
                     <Heart className={`h-4 w-4 ${post.hasLiked ? 'fill-current' : ''}`} />
                     <span className="text-xs">{post._count?.likes || 0}</span>
                   </Button>
                   
-                  <Button variant="ghost" size="sm" className="h-8 gap-2">
+                  <Button variant="ghost" size="sm" className="h-8 gap-1 sm:gap-2">
                     <MessageCircle className="h-4 w-4" />
                     <span className="text-xs">{post._count?.comments || 0}</span>
                   </Button>
                   
-                  <Button variant="ghost" size="sm" className="h-8 gap-2">
+                  <Button variant="ghost" size="sm" className="h-8 gap-1 sm:gap-2">
                     <Share className="h-4 w-4" />
-                    <span className="text-xs">Share</span>
+                    <span className="text-xs hidden sm:inline">Share</span>
                   </Button>
                 </div>
               </div>
