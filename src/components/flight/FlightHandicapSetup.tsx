@@ -89,7 +89,7 @@ export const FlightHandicapSetup: React.FC = () => {
         .from('flight_players')
         .select('id, user_id, guest_name, handicap, handicap_locked, player_order')
         .eq('flight_id', currentFlight.id)
-        .order('player_order');
+        .order('player_order') as { data: any[] | null, error: any };
 
       if (error) {
         console.error('❌ Database query failed:', error);
@@ -236,12 +236,12 @@ export const FlightHandicapSetup: React.FC = () => {
       const updateQuery = player.userId 
         ? supabase
             .from('flight_players')
-            .update({ handicap_locked: true })
+            .update({ handicap_locked: true } as any)
             .eq('flight_id', currentFlight.id)
             .eq('user_id', player.userId)
         : supabase
             .from('flight_players')
-            .update({ handicap_locked: true })
+            .update({ handicap_locked: true } as any)
             .eq('id', playerId);
 
       const { error } = await updateQuery;
@@ -276,12 +276,12 @@ export const FlightHandicapSetup: React.FC = () => {
       const updateQuery = player.userId 
         ? supabase
             .from('flight_players')
-            .update({ handicap_locked: false })
+            .update({ handicap_locked: false } as any)
             .eq('flight_id', currentFlight.id)
             .eq('user_id', player.userId)
         : supabase
             .from('flight_players')
-            .update({ handicap_locked: false })
+            .update({ handicap_locked: false } as any)
             .eq('id', playerId);
 
       const { error } = await updateQuery;

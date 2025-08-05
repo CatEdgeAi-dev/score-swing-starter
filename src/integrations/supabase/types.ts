@@ -394,6 +394,7 @@ export type Database = {
           flight_id: string
           guest_name: string | null
           handicap: number | null
+          handicap_locked: boolean
           id: string
           player_order: number
           user_id: string | null
@@ -403,6 +404,7 @@ export type Database = {
           flight_id: string
           guest_name?: string | null
           handicap?: number | null
+          handicap_locked?: boolean
           id?: string
           player_order?: number
           user_id?: string | null
@@ -412,6 +414,7 @@ export type Database = {
           flight_id?: string
           guest_name?: string | null
           handicap?: number | null
+          handicap_locked?: boolean
           id?: string
           player_order?: number
           user_id?: string | null
