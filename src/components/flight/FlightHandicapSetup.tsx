@@ -63,6 +63,9 @@ export const FlightHandicapSetup: React.FC = () => {
   const loadFlightHandicaps = async () => {
     if (!currentFlight) return;
 
+    console.log('🚨 IVAN DEBUG: loadFlightHandicaps called for flight:', currentFlight.id);
+    console.log('🚨 IVAN DEBUG: Current user:', user?.id);
+
     try {
       // ===== DEBUG: HANDICAP LOADING START =====
       console.group('🎲 HANDICAP LOADING DEBUG');
