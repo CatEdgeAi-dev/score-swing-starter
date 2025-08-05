@@ -42,13 +42,18 @@ export const FlightHandicapSetup: React.FC = () => {
         },
         (payload) => {
           console.log('Real-time handicap update received:', payload);
-          const playerId = payload.new.id;
+          const userId = payload.new.user_id;
           const handicap = payload.new.handicap;
-          if (handicap !== null) {
-            setHandicaps(prev => ({
-              ...prev,
-              [playerId]: handicap.toString()
-            }));
+          
+          if (userId && handicap !== null) {
+            // Find the player in currentFlight by user_id
+            const player = currentFlight.players.find(p => p.id === userId);
+            if (player) {
+              setHandicaps(prev => ({
+                ...prev,
+                [player.id]: handicap.toString()
+              }));
+            }
           }
         }
       )
@@ -62,67 +67,28 @@ export const FlightHandicapSetup: React.FC = () => {
   const loadFlightHandicaps = async () => {
     if (!currentFlight) return;
 
-    console.log('Loading handicaps for flight:', currentFlight.id);
-    console.log('currentFlight.players:', currentFlight.players);
-
     try {
-      const { data, error } = await supabase
+      const { data: players, error } = await supabase
         .from('flight_players')
         .select('user_id, guest_name, handicap')
         .eq('flight_id', currentFlight.id);
 
       if (error) throw error;
 
-      console.log('Loaded flight players handicaps from DB:', data);
-
       const handicapData: { [playerId: string]: string } = {};
       
       // Map each player in currentFlight to their handicap from database
-      currentFlight.players.forEach(player => {
-        console.log(`Mapping player: ${player.name} (ID: ${player.id})`);
-        
-        // Find the corresponding database record
-        const dbRecord = data.find(dbPlayer => {
-          // For registered users, match by user_id
-          if (dbPlayer.user_id === player.id) {
-            console.log(`  Found by user_id match: ${dbPlayer.user_id}`);
-            return true;
-          }
-          // For guest players, match by guest_name
-          if (dbPlayer.guest_name === player.name) {
-            console.log(`  Found by guest_name match: ${dbPlayer.guest_name}`);
-            return true;
-          }
-          return false;
-        });
+      currentFlight.players.forEach(player => {        
+        // Find the corresponding database record by user_id
+        const dbRecord = players.find(dbPlayer => dbPlayer.user_id === player.id);
         
         if (dbRecord && dbRecord.handicap !== null) {
           handicapData[player.id] = dbRecord.handicap.toString();
-          console.log(`  Set handicap: ${dbRecord.handicap}`);
-        } else {
-          console.log(`  No handicap found in DB for this player`);
         }
       });
       
-      console.log('Final handicap mapping:', handicapData);
-      
-      // Only update state if there are actual changes to prevent overwriting user input
-      setHandicaps(prev => {
-        console.log('Previous handicaps state:', prev);
-        const hasChanges = Object.keys(handicapData).some(key => 
-          prev[key] !== handicapData[key]
-        ) || Object.keys(prev).some(key => 
-          handicapData[key] === undefined && prev[key] !== undefined
-        );
-        
-        if (hasChanges) {
-          console.log('Updating handicaps state with:', handicapData);
-          return { ...prev, ...handicapData };
-        }
-        
-        console.log('No changes needed, keeping previous state');
-        return prev;
-      });
+      // Update state with database values
+      setHandicaps(prev => ({ ...prev, ...handicapData }));
     } catch (error) {
       console.error('Error loading flight handicaps:', error);
     }
@@ -162,13 +128,16 @@ export const FlightHandicapSetup: React.FC = () => {
       
       console.log('Saving handicap for player:', playerId, 'value:', handicap);
       
-      // Save to database immediately
+      // Save to database immediately - need to find the flight_players record ID
       try {
         const handicapValue = handicap === '' ? null : parseFloat(handicap);
+        
+        // Find the flight_players record for this user
         const { error } = await supabase
           .from('flight_players')
           .update({ handicap: handicapValue })
-          .eq('id', playerId);
+          .eq('flight_id', currentFlight.id)
+          .eq('user_id', playerId); // Use user_id to find the record
 
         if (error) throw error;
         console.log('Handicap saved successfully');
