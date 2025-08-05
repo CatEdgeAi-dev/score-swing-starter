@@ -33,10 +33,22 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
   const [currentStep, setCurrentStep] = useState<'setup' | 'validation' | 'ready'>('setup');
 
   useEffect(() => {
-    if (!currentFlight || !user) return;
+    console.log('FlightWorkflowModal useEffect triggered:', {
+      currentFlightId: currentFlight?.id,
+      needsValidation,
+      userId: user?.id,
+      currentStep
+    });
+
+    if (!currentFlight || !user) {
+      console.log('Missing flight or user, returning early');
+      return;
+    }
 
     const checkFlightStatus = async () => {
       try {
+        console.log('Checking flight status for flight:', currentFlight.id);
+        
         // Check if all players have handicaps set in the database
         const { data: players, error } = await supabase
           .from('flight_players')
@@ -46,14 +58,33 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
         if (error) throw error;
 
         const allHandicapsSet = players.every(p => p.handicap !== null);
-        console.log('Flight status check - all handicaps set:', allHandicapsSet, 'needs validation:', needsValidation);
+        console.log('Flight status check results:', {
+          players,
+          allHandicapsSet,
+          needsValidation,
+          currentStep
+        });
+        
+        let newStep: 'setup' | 'validation' | 'ready';
         
         if (!allHandicapsSet) {
-          setCurrentStep('setup');
+          newStep = 'setup';
+          console.log('Setting step to setup - not all handicaps set');
         } else if (needsValidation) {
-          setCurrentStep('validation');
+          newStep = 'validation';
+          console.log('Setting step to validation - needs validation is true');
         } else {
-          setCurrentStep('ready');
+          newStep = 'ready';
+          console.log('Setting step to ready - all handicaps set and no validation needed');
+        }
+        
+        console.log('Current step before update:', currentStep, 'New step:', newStep);
+        
+        if (currentStep !== newStep) {
+          console.log('Step is changing from', currentStep, 'to', newStep);
+          setCurrentStep(newStep);
+        } else {
+          console.log('Step remains the same:', currentStep);
         }
       } catch (error) {
         console.error('Error checking flight status:', error);
@@ -62,7 +93,7 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
     };
 
     checkFlightStatus();
-  }, [currentFlight?.id, needsValidation, user?.id]);
+  }, [currentFlight?.id, needsValidation, user?.id, currentStep]);
 
   const handleStartRound = () => {
     sessionStorage.setItem('fromRounds', 'true');

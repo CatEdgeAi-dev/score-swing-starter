@@ -182,7 +182,9 @@ export const FlightHandicapSetup: React.FC = () => {
       console.log('All handicaps are set, starting validation...');
       
       // Start the validation process
+      console.log('Calling startValidation()...');
       startValidation();
+      console.log('startValidation() called successfully');
 
       toast({
         title: "Handicaps Set!",
