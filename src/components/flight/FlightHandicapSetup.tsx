@@ -87,7 +87,7 @@ export const FlightHandicapSetup: React.FC = () => {
     try {
       const { data: players, error } = await supabase
         .from('flight_players')
-        .select('id, user_id, guest_name, handicap, player_order')
+        .select('id, user_id, guest_name, handicap, handicap_locked, player_order')
         .eq('flight_id', currentFlight.id)
         .order('player_order');
 
@@ -97,6 +97,7 @@ export const FlightHandicapSetup: React.FC = () => {
       }
 
       const handicapData: { [playerId: string]: string } = {};
+      const statusData: { [playerId: string]: HandicapStatus } = {};
       
       // Map database records to player IDs correctly
       players?.forEach((dbPlayer, index) => {
@@ -114,13 +115,19 @@ export const FlightHandicapSetup: React.FC = () => {
           return false;
         });
         
-        if (player && dbPlayer.handicap !== null) {
-          handicapData[player.id] = dbPlayer.handicap.toString();
+        if (player) {
+          if (dbPlayer.handicap !== null) {
+            handicapData[player.id] = dbPlayer.handicap.toString();
+          }
+          // Set status based on database locked status
+          statusData[player.id] = dbPlayer.handicap_locked ? 'ready' : 'editing';
         }
       });
       
       console.log('📊 Final handicap data loaded:', handicapData);
+      console.log('📊 Status data loaded:', statusData);
       setHandicaps(handicapData);
+      setHandicapStatuses(statusData);
     } catch (error) {
       console.error('❌ Error loading flight handicaps:', error);
     }
@@ -222,16 +229,70 @@ export const FlightHandicapSetup: React.FC = () => {
     const player = currentFlight.players.find(p => p.id === playerId);
     if (!player || !handicaps[playerId]?.trim()) return;
     
-    setHandicapStatuses(prev => ({ ...prev, [playerId]: 'ready' }));
-    
-    toast({
-      title: "Handicap Locked In",
-      description: `${player.name}'s handicap is confirmed and ready for validation.`,
-    });
+    try {
+      setHandicapStatuses(prev => ({ ...prev, [playerId]: 'syncing' }));
+      
+      // Save the "ready" status to the database so all players can see it
+      const updateQuery = player.userId 
+        ? supabase
+            .from('flight_players')
+            .update({ handicap_locked: true })
+            .eq('flight_id', currentFlight.id)
+            .eq('user_id', player.userId)
+        : supabase
+            .from('flight_players')
+            .update({ handicap_locked: true })
+            .eq('id', playerId);
+
+      const { error } = await updateQuery;
+
+      if (error) throw error;
+      
+      setHandicapStatuses(prev => ({ ...prev, [playerId]: 'ready' }));
+      
+      toast({
+        title: "Handicap Locked In",
+        description: `${player.name}'s handicap is confirmed and ready for validation.`,
+      });
+    } catch (error) {
+      console.error('Error locking handicap:', error);
+      setHandicapStatuses(prev => ({ ...prev, [playerId]: 'editing' }));
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to lock handicap. Please try again.",
+      });
+    }
   };
 
-  const handleUnlockHandicap = (playerId: string) => {
-    setHandicapStatuses(prev => ({ ...prev, [playerId]: 'editing' }));
+  const handleUnlockHandicap = async (playerId: string) => {
+    const player = currentFlight.players.find(p => p.id === playerId);
+    if (!player) return;
+    
+    try {
+      setHandicapStatuses(prev => ({ ...prev, [playerId]: 'syncing' }));
+      
+      // Remove the "ready" status from the database
+      const updateQuery = player.userId 
+        ? supabase
+            .from('flight_players')
+            .update({ handicap_locked: false })
+            .eq('flight_id', currentFlight.id)
+            .eq('user_id', player.userId)
+        : supabase
+            .from('flight_players')
+            .update({ handicap_locked: false })
+            .eq('id', playerId);
+
+      const { error } = await updateQuery;
+
+      if (error) throw error;
+      
+      setHandicapStatuses(prev => ({ ...prev, [playerId]: 'editing' }));
+    } catch (error) {
+      console.error('Error unlocking handicap:', error);
+      setHandicapStatuses(prev => ({ ...prev, [playerId]: 'ready' }));
+    }
   };
 
   const handleSetHandicaps = async () => {
