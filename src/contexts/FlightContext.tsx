@@ -545,6 +545,7 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const startValidation = () => {
+    console.log('startValidation called, currentFlight:', currentFlight);
     if (currentFlight) {
       const statuses: ValidationStatus[] = currentFlight.players.map(player => ({
         playerId: player.id,
@@ -552,8 +553,13 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         validationsNeeded: currentFlight.players.length - 1,
         status: 'pending' as const
       }));
+      console.log('Setting validation statuses:', statuses);
       setValidationStatuses(statuses);
+      console.log('Setting needsValidation to true');
       setNeedsValidation(true);
+      console.log('startValidation completed');
+    } else {
+      console.log('startValidation called but no currentFlight available');
     }
   };
 
