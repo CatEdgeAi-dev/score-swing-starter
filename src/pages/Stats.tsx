@@ -129,12 +129,31 @@ const StatsContent: React.FC = () => {
 
               <TabsContent value="stats" className="space-y-6">
                 <Card>
-                  <CardContent className="p-8 text-center">
+                  <CardContent className="p-8 text-center space-y-4">
                     <BarChart3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                    <h3 className="text-xl font-semibold mb-2">No Statistics Available</h3>
-                    <p className="text-muted-foreground">
-                      Play some rounds to see your golf statistics and performance analytics.
-                    </p>
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-semibold">No Statistics Available</h3>
+                      <p className="text-muted-foreground">
+                        Play some rounds to see your golf statistics and performance analytics.
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                      <Button 
+                        onClick={() => navigate('/scorecard')}
+                        className="flex items-center gap-2"
+                      >
+                        <Target className="h-4 w-4" />
+                        Start Your First Round
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setSearchParams({ tab: 'leaderboards' })}
+                        className="flex items-center gap-2"
+                      >
+                        <Trophy className="h-4 w-4" />
+                        View Leaderboards
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -398,14 +417,59 @@ const StatsContent: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="leaderboards" className="space-y-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-xl font-semibold">Global Leaderboard</h2>
+                <p className="text-sm text-muted-foreground">See how you rank against other players</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setSearchParams({ tab: 'stats' })}
+                className="flex items-center gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                My Stats
+              </Button>
+            </div>
             <GlobalLeaderboard />
           </TabsContent>
 
           <TabsContent value="achievements" className="space-y-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-xl font-semibold">Achievements</h2>
+                <p className="text-sm text-muted-foreground">Track your golf milestones and accomplishments</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setSearchParams({ tab: 'challenges' })}
+                className="flex items-center gap-2"
+              >
+                <Target className="h-4 w-4" />
+                View Challenges
+              </Button>
+            </div>
             <AchievementsBadges />
           </TabsContent>
 
           <TabsContent value="challenges" className="space-y-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-xl font-semibold">Active Challenges</h2>
+                <p className="text-sm text-muted-foreground">Join challenges to improve specific skills</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setSearchParams({ tab: 'stats' })}
+                className="flex items-center gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                My Progress
+              </Button>
+            </div>
             <ChallengeTracker />
           </TabsContent>
         </Tabs>

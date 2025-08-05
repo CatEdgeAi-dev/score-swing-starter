@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Target, Trophy, Clock } from "lucide-react";
+import { Calendar, Target, Trophy, Clock, BarChart3, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface Challenge {
   id: string;
@@ -24,6 +25,7 @@ export const ChallengeTracker = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchActiveChallenges();
@@ -183,10 +185,31 @@ export const ChallengeTracker = () => {
           })}
 
           {challenges.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No active challenges</p>
-              <p className="text-sm">Check back later for new challenges!</p>
+            <div className="text-center py-12 space-y-4 text-muted-foreground">
+              <Target className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">No Active Challenges</h3>
+                <p className="text-sm">Challenges help you improve specific aspects of your game</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/stats?tab=stats')}
+                  className="flex items-center gap-2"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  View My Stats
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/stats?tab=leaderboards')}
+                  className="flex items-center gap-2"
+                >
+                  <Users className="h-4 w-4" />
+                  Check Leaderboards
+                </Button>
+              </div>
+              <p className="text-xs">Check back later for new challenges!</p>
             </div>
           )}
         </div>

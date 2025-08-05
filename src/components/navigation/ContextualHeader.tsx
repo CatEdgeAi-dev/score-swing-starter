@@ -99,8 +99,8 @@ export const ContextualHeader: React.FC<ContextualHeaderProps> = ({ title }) => 
     );
   }
 
-  // Show performance section navigation
-  if (location.pathname === '/performance') {
+  // Show performance section navigation  
+  if (location.pathname === '/stats') {
     const activeTab = searchParams.get('tab') || 'stats';
     const quickActions = [
       { label: 'My Stats', tab: 'stats', icon: BarChart3 },
@@ -130,7 +130,7 @@ export const ContextualHeader: React.FC<ContextualHeaderProps> = ({ title }) => 
                   variant={isActive ? "default" : "ghost"}
                   size="sm"
                   className="justify-start gap-2 h-8"
-                  onClick={() => navigate(`/performance?tab=${action.tab}`)}
+                  onClick={() => navigate(`/stats?tab=${action.tab}`)}
                 >
                   <Icon className="h-3 w-3" />
                   <span className="text-xs">{action.label}</span>

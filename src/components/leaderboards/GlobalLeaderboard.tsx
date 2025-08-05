@@ -3,8 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Medal, Award } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trophy, Medal, Award, BarChart3, Target } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface LeaderboardEntry {
   id: string;
@@ -24,6 +26,7 @@ export const GlobalLeaderboard = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchLeaderboard();
@@ -139,10 +142,31 @@ export const GlobalLeaderboard = () => {
             </div>
           ))}
           {leaderboard.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No rankings available yet</p>
-              <p className="text-sm">Play some rounds to see leaderboards!</p>
+            <div className="text-center py-12 space-y-4 text-muted-foreground">
+              <Trophy className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">No Rankings Available</h3>
+                <p className="text-sm">Be among the first to establish leaderboard rankings</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/scorecard')}
+                  className="flex items-center gap-2"
+                >
+                  <Target className="h-4 w-4" />
+                  Play a Round
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/stats?tab=stats')}
+                  className="flex items-center gap-2"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  View My Stats
+                </Button>
+              </div>
+              <p className="text-xs">Rankings update automatically after playing rounds</p>
             </div>
           )}
         </div>
