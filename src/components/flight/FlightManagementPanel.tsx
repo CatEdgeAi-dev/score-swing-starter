@@ -18,12 +18,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { FlightHandicapSetup } from './FlightHandicapSetup';
+import { FlightHandicapValidation } from './FlightHandicapValidation';
 
 export const FlightManagementPanel: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { currentFlight, currentPlayer, leaveFlight, isFlightMode } = useFlightContext();
+  const { currentFlight, currentPlayer, leaveFlight, isFlightMode, needsValidation, validationStatuses } = useFlightContext();
   
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -34,6 +36,13 @@ export const FlightManagementPanel: React.FC = () => {
 
   const isCreator = currentFlight.createdBy === user?.id;
   const playerCount = currentFlight.players.length;
+  
+  // Check if all players have handicaps set
+  const allHandicapsSet = currentFlight.players.every(player => player.handicap !== undefined);
+  
+  // Check validation progress
+  const allValidationsComplete = validationStatuses.length > 0 && 
+    validationStatuses.every(status => status.status === 'validated');
 
   const handleLeaveFlight = () => {
     leaveFlight();
@@ -55,6 +64,77 @@ export const FlightManagementPanel: React.FC = () => {
     });
     navigate('/rounds');
   };
+
+  // Show handicap setup if handicaps aren't set
+  if (!allHandicapsSet) {
+    return (
+      <>
+        <FlightHandicapSetup />
+        <Card className="w-full">
+          <CardContent className="pt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowLeaveDialog(true)}
+              className="w-full"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Leave Flight
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <ConfirmationDialog
+          open={showLeaveDialog}
+          onOpenChange={setShowLeaveDialog}
+          title="Leave Flight?"
+          description={`Are you sure you want to leave ${currentFlight.name}? You'll lose access to the flight scorecard.`}
+          confirmLabel="Leave Flight"
+          cancelLabel="Stay"
+          variant="destructive"
+          onConfirm={handleLeaveFlight}
+        />
+      </>
+    );
+  }
+
+  // Show validation if handicaps are set but validation isn't complete
+  if (needsValidation && !allValidationsComplete) {
+    return (
+      <>
+        <FlightHandicapValidation />
+        <Card className="w-full">
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  Complete peer validation to start your round
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowLeaveDialog(true)}
+                className="w-full"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Leave Flight
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <ConfirmationDialog
+          open={showLeaveDialog}
+          onOpenChange={setShowLeaveDialog}
+          title="Leave Flight?"
+          description={`Are you sure you want to leave ${currentFlight.name}? You'll lose access to the flight scorecard.`}
+          confirmLabel="Leave Flight"
+          cancelLabel="Stay"
+          variant="destructive"
+          onConfirm={handleLeaveFlight}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -103,15 +183,20 @@ export const FlightManagementPanel: React.FC = () => {
                     player.id === currentPlayer?.id ? 'bg-primary/10 border border-primary/20' : 'bg-muted/50'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      {index + 1}
-                    </Badge>
-                    <span className="text-sm font-medium">{player.name}</span>
-                    {player.email && (
-                      <span className="text-xs text-muted-foreground">({player.email})</span>
-                    )}
-                  </div>
+                   <div className="flex items-center gap-2">
+                     <Badge variant="outline" className="text-xs">
+                       {index + 1}
+                     </Badge>
+                     <span className="text-sm font-medium">{player.name}</span>
+                     {player.handicap !== undefined && (
+                       <Badge variant="secondary" className="text-xs">
+                         {player.handicap}
+                       </Badge>
+                     )}
+                     {player.email && (
+                       <span className="text-xs text-muted-foreground">({player.email})</span>
+                     )}
+                   </div>
                   {player.id === currentPlayer?.id && (
                     <Badge variant="secondary" className="text-xs">You</Badge>
                   )}
@@ -129,36 +214,48 @@ export const FlightManagementPanel: React.FC = () => {
 
           <Separator />
 
-          {/* Flight Actions */}
-          <div className="space-y-2">
-            {isCreator ? (
-              <>
-                <Button variant="outline" size="sm" className="w-full gap-2">
-                  <Settings className="h-4 w-4" />
-                  Flight Settings
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  className="w-full gap-2"
-                  onClick={() => setShowDeleteDialog(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete Flight
-                </Button>
-              </>
-            ) : (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full gap-2"
-                onClick={() => setShowLeaveDialog(true)}
-              >
-                <LogOut className="h-4 w-4" />
-                Leave Flight
-              </Button>
-            )}
-          </div>
+           {/* Flight Actions */}
+           <div className="space-y-2">
+             <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+               <p className="text-sm text-green-800 font-medium">✓ Validation Complete</p>
+               <p className="text-xs text-green-700">Ready to start your round!</p>
+             </div>
+             
+             <Button 
+               onClick={() => navigate('/scorecard')}
+               className="w-full gap-2"
+             >
+               Start Round
+             </Button>
+             
+             {isCreator ? (
+               <>
+                 <Button variant="outline" size="sm" className="w-full gap-2">
+                   <Settings className="h-4 w-4" />
+                   Flight Settings
+                 </Button>
+                 <Button 
+                   variant="destructive" 
+                   size="sm" 
+                   className="w-full gap-2"
+                   onClick={() => setShowDeleteDialog(true)}
+                 >
+                   <Trash2 className="h-4 w-4" />
+                   Delete Flight
+                 </Button>
+               </>
+             ) : (
+               <Button 
+                 variant="outline" 
+                 size="sm" 
+                 className="w-full gap-2"
+                 onClick={() => setShowLeaveDialog(true)}
+               >
+                 <LogOut className="h-4 w-4" />
+                 Leave Flight
+               </Button>
+             )}
+           </div>
         </CardContent>
       </Card>
 

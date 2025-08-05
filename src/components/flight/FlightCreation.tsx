@@ -15,6 +15,7 @@ interface Player {
   isRegistered: boolean;
   userId?: string;
   email?: string;
+  handicap?: number;
 }
 
 interface FlightCreationProps {
@@ -237,7 +238,7 @@ export const FlightCreation: React.FC<FlightCreationProps> = ({
               onClick={handleCreateFlight}
               disabled={!flightName.trim() || !courseName.trim()}
             >
-              Create Flight & Start Round
+              Create Flight & Set Handicaps
             </Button>
           </div>
         </div>

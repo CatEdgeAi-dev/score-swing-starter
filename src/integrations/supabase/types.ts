@@ -344,6 +344,50 @@ export type Database = {
         }
         Relationships: []
       }
+      flight_handicap_validations: {
+        Row: {
+          claimed_handicap: number | null
+          created_at: string
+          flight_id: string
+          id: string
+          updated_at: string
+          validated_user_id: string
+          validation_notes: string | null
+          validation_status: string
+          validator_user_id: string
+        }
+        Insert: {
+          claimed_handicap?: number | null
+          created_at?: string
+          flight_id: string
+          id?: string
+          updated_at?: string
+          validated_user_id: string
+          validation_notes?: string | null
+          validation_status?: string
+          validator_user_id: string
+        }
+        Update: {
+          claimed_handicap?: number | null
+          created_at?: string
+          flight_id?: string
+          id?: string
+          updated_at?: string
+          validated_user_id?: string
+          validation_notes?: string | null
+          validation_status?: string
+          validator_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_handicap_validations_flight_id_fkey"
+            columns: ["flight_id"]
+            isOneToOne: false
+            referencedRelation: "flights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flight_players: {
         Row: {
           created_at: string

@@ -6,6 +6,14 @@ interface Player {
   isRegistered: boolean;
   userId?: string;
   email?: string;
+  handicap?: number;
+}
+
+interface ValidationStatus {
+  playerId: string;
+  validationsReceived: number;
+  validationsNeeded: number;
+  status: 'pending' | 'validated' | 'questioned';
 }
 
 interface Flight {
@@ -31,6 +39,9 @@ interface FlightContextType {
     players: Player[];
   }) => Flight;
   leaveFlight: () => void;
+  validationStatuses: ValidationStatus[];
+  needsValidation: boolean;
+  startValidation: () => void;
 }
 
 const FlightContext = createContext<FlightContextType | undefined>(undefined);
@@ -38,6 +49,8 @@ const FlightContext = createContext<FlightContextType | undefined>(undefined);
 export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentFlight, setCurrentFlight] = useState<Flight | null>(null);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
+  const [validationStatuses, setValidationStatuses] = useState<ValidationStatus[]>([]);
+  const [needsValidation, setNeedsValidation] = useState(false);
 
   const isFlightMode = currentFlight !== null;
 
@@ -74,6 +87,22 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const leaveFlight = () => {
     setCurrentFlight(null);
     setCurrentPlayer(null);
+    setValidationStatuses([]);
+    setNeedsValidation(false);
+  };
+
+  const startValidation = () => {
+    if (currentFlight) {
+      // Initialize validation statuses for all players
+      const statuses: ValidationStatus[] = currentFlight.players.map(player => ({
+        playerId: player.id,
+        validationsReceived: 0,
+        validationsNeeded: currentFlight.players.length - 1, // Validate by all other players
+        status: 'pending' as const
+      }));
+      setValidationStatuses(statuses);
+      setNeedsValidation(true);
+    }
   };
 
   return (
@@ -86,6 +115,9 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       switchToPlayer,
       createFlight,
       leaveFlight,
+      validationStatuses,
+      needsValidation,
+      startValidation,
     }}>
       {children}
     </FlightContext.Provider>
