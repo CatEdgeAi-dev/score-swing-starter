@@ -393,6 +393,7 @@ export type Database = {
           created_at: string
           flight_id: string
           guest_name: string | null
+          handicap: number | null
           id: string
           player_order: number
           user_id: string | null
@@ -401,6 +402,7 @@ export type Database = {
           created_at?: string
           flight_id: string
           guest_name?: string | null
+          handicap?: number | null
           id?: string
           player_order?: number
           user_id?: string | null
@@ -409,6 +411,7 @@ export type Database = {
           created_at?: string
           flight_id?: string
           guest_name?: string | null
+          handicap?: number | null
           id?: string
           player_order?: number
           user_id?: string | null

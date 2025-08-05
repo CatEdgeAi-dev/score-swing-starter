@@ -19,10 +19,67 @@ export const FlightHandicapSetup: React.FC = () => {
 
   useEffect(() => {
     if (currentFlight && user) {
+      // Load existing handicaps from database
+      loadFlightHandicaps();
       // Load user's current handicap from profile
       loadUserHandicap();
     }
   }, [currentFlight, user]);
+
+  // Set up real-time subscription for handicap updates
+  useEffect(() => {
+    if (!currentFlight) return;
+
+    const channel = supabase
+      .channel('flight-handicaps')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'flight_players',
+          filter: `flight_id=eq.${currentFlight.id}`,
+        },
+        (payload) => {
+          const playerId = payload.new.id;
+          const handicap = payload.new.handicap;
+          if (handicap !== null) {
+            setHandicaps(prev => ({
+              ...prev,
+              [playerId]: handicap.toString()
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentFlight]);
+
+  const loadFlightHandicaps = async () => {
+    if (!currentFlight) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('flight_players')
+        .select('id, handicap')
+        .eq('flight_id', currentFlight.id);
+
+      if (error) throw error;
+
+      const handicapData: { [playerId: string]: string } = {};
+      data.forEach(player => {
+        if (player.handicap !== null) {
+          handicapData[player.id] = player.handicap.toString();
+        }
+      });
+      setHandicaps(handicapData);
+    } catch (error) {
+      console.error('Error loading flight handicaps:', error);
+    }
+  };
 
   const loadUserHandicap = async () => {
     if (!user) return;
@@ -50,10 +107,28 @@ export const FlightHandicapSetup: React.FC = () => {
     }
   };
 
-  const handleHandicapChange = (playerId: string, handicap: string) => {
+  const handleHandicapChange = async (playerId: string, handicap: string) => {
     // Allow only valid handicap values (0-54 with up to 1 decimal place)
     if (handicap === '' || /^\d{0,2}(\.\d{0,1})?$/.test(handicap)) {
       setHandicaps(prev => ({ ...prev, [playerId]: handicap }));
+      
+      // Save to database immediately
+      try {
+        const handicapValue = handicap === '' ? null : parseFloat(handicap);
+        const { error } = await supabase
+          .from('flight_players')
+          .update({ handicap: handicapValue })
+          .eq('id', playerId);
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error saving handicap:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to save handicap. Please try again.",
+        });
+      }
     }
   };
 

@@ -92,7 +92,8 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           user_id,
           guest_name,
           player_order,
-          flight_id
+          flight_id,
+          handicap
         `)
         .eq('flight_id', flightId)
         .order('player_order');
@@ -120,11 +121,11 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const players: Player[] = playersData.map(player => {
         const profile = profilesData.find(p => p.id === player.user_id);
         return {
-          id: player.user_id || player.id,
+          id: player.id, // Use flight_player id as the unique identifier
           name: player.guest_name || profile?.display_name || 'Unknown Player',
           isRegistered: !!player.user_id,
           userId: player.user_id || undefined,
-          handicap: profile?.whs_index || undefined,
+          handicap: player.handicap || undefined, // Use handicap from flight_players table
           displayName: profile?.display_name
         };
       });
