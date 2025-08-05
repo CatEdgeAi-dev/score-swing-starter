@@ -69,7 +69,7 @@ export const FlightHandicapSetup: React.FC = () => {
       // Map each player in currentFlight to their handicap from database
       currentFlight.players.forEach(player => {        
         // Find the corresponding database record by user_id
-        const dbRecord = players.find(dbPlayer => dbPlayer.user_id === player.id);
+        const dbRecord = players.find(dbPlayer => dbPlayer.user_id === player.userId);
         
         if (dbRecord && dbRecord.handicap !== null) {
           handicapData[player.id] = dbRecord.handicap.toString();
@@ -115,21 +115,27 @@ export const FlightHandicapSetup: React.FC = () => {
     if (handicap === '' || /^\d{0,2}(\.\d{0,1})?$/.test(handicap)) {
       setHandicaps(prev => ({ ...prev, [playerId]: handicap }));
       
-      console.log('Saving handicap for player:', playerId, 'value:', handicap);
+      // Find the player to get their userId
+      const player = currentFlight.players.find(p => p.id === playerId);
+      if (!player?.userId) {
+        console.error('Player userId not found for player ID:', playerId);
+        return;
+      }
       
-      // Save to database immediately - need to find the flight_players record ID
+      console.log('Saving handicap for player:', player.name, 'userId:', player.userId, 'value:', handicap);
+      
+      // Save to database immediately using the correct user_id
       try {
         const handicapValue = handicap === '' ? null : parseFloat(handicap);
         
-        // Find the flight_players record for this user
         const { error } = await supabase
           .from('flight_players')
           .update({ handicap: handicapValue })
           .eq('flight_id', currentFlight.id)
-          .eq('user_id', playerId); // Use user_id to find the record
+          .eq('user_id', player.userId); // Use the correct user_id
 
         if (error) throw error;
-        console.log('Handicap saved successfully');
+        console.log('Handicap saved successfully for', player.name);
       } catch (error) {
         console.error('Error saving handicap:', error);
         toast({
