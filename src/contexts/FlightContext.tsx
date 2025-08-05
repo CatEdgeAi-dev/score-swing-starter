@@ -82,6 +82,21 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         .eq('id', flightId)
         .single();
 
+      // If flight doesn't exist (was deleted), clear current flight
+      if (flightError && flightError.code === 'PGRST116') {
+        console.log('Flight was deleted, clearing current flight');
+        setCurrentFlight(null);
+        setCurrentPlayer(null);
+        setValidationStatuses([]);
+        setNeedsValidation(false);
+        toast({
+          title: "Flight Deleted",
+          description: "This flight has been deleted by the creator.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       if (flightError) throw flightError;
 
       // Fetch flight players with profile data
