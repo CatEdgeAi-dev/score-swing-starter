@@ -277,14 +277,28 @@ export const HandicapWizard: React.FC<HandicapWizardProps> = ({
                     Uploaded
                   </Badge>
                 </div>
-                <Button 
-                  onClick={() => setCurrentStep('extract')} 
-                  className="w-full"
-                  disabled={isUploading}
-                >
-                  Continue
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+                
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setProofImage(null);
+                      setExtractedData({ value: null, confidence: 0 });
+                    }}
+                    className="flex-1"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Retake Photo
+                  </Button>
+                  <Button 
+                    onClick={() => setCurrentStep('extract')} 
+                    className="flex-1"
+                    disabled={isUploading}
+                  >
+                    Continue
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
