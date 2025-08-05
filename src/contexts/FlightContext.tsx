@@ -46,6 +46,7 @@ interface FlightContextType {
   }) => Promise<Flight>;
   leaveFlight: () => Promise<void>;
   joinFlight: (flightId: string) => Promise<void>;
+  deleteFlight: (flightId: string) => Promise<void>;
   validationStatuses: ValidationStatus[];
   needsValidation: boolean;
   startValidation: () => void;
@@ -399,6 +400,71 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [toast]);
 
+  // Delete flight (only for flight creators)
+  const deleteFlight = useCallback(async (flightId: string) => {
+    if (!user) throw new Error('User must be logged in to delete a flight');
+
+    try {
+      setIsLoading(true);
+
+      // Check if user is the flight creator
+      const { data: flight, error: flightError } = await supabase
+        .from('flights')
+        .select('created_by')
+        .eq('id', flightId)
+        .single();
+
+      if (flightError) throw flightError;
+
+      if (flight.created_by !== user.id) {
+        throw new Error('Only flight creators can delete flights');
+      }
+
+      // Delete flight players first (due to foreign key constraint)
+      const { error: playersError } = await supabase
+        .from('flight_players')
+        .delete()
+        .eq('flight_id', flightId);
+
+      if (playersError) throw playersError;
+
+      // Delete the flight
+      const { error: deleteError } = await supabase
+        .from('flights')
+        .delete()
+        .eq('id', flightId);
+
+      if (deleteError) throw deleteError;
+
+      // Clear current flight if it was the deleted one
+      if (currentFlight?.id === flightId) {
+        setCurrentFlight(null);
+        setCurrentPlayer(null);
+        setValidationStatuses([]);
+        setNeedsValidation(false);
+      }
+
+      toast({
+        title: "Flight Deleted",
+        description: "The flight has been successfully deleted"
+      });
+
+      // Refresh flights list
+      await refreshFlights();
+    } catch (error) {
+      console.error('Error deleting flight:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete flight",
+        variant: "destructive"
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, currentFlight, toast, refreshFlights]);
+
+
   // Set up realtime subscriptions
   useEffect(() => {
     if (!user) return;
@@ -468,6 +534,7 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       createFlight,
       leaveFlight,
       joinFlight,
+      deleteFlight,
       validationStatuses,
       needsValidation,
       startValidation,

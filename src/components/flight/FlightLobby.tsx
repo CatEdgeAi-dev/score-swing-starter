@@ -1,11 +1,22 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, MapPin, Calendar, Loader2 } from 'lucide-react';
+import { Users, MapPin, Calendar, Loader2, Trash2 } from 'lucide-react';
 import { useFlightContext } from '@/contexts/FlightContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageLoading } from '@/components/ui/page-loading';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface FlightLobbyProps {
   onCreateFlight: () => void;
@@ -13,7 +24,7 @@ interface FlightLobbyProps {
 }
 
 export const FlightLobby: React.FC<FlightLobbyProps> = ({ onCreateFlight, onJoinFlight }) => {
-  const { availableFlights, joinFlight, isLoading, refreshFlights } = useFlightContext();
+  const { availableFlights, joinFlight, deleteFlight, isLoading, refreshFlights } = useFlightContext();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -30,8 +41,20 @@ export const FlightLobby: React.FC<FlightLobbyProps> = ({ onCreateFlight, onJoin
     }
   };
 
+  const handleDeleteFlight = async (flightId: string) => {
+    try {
+      await deleteFlight(flightId);
+    } catch (error) {
+      console.error('Failed to delete flight:', error);
+    }
+  };
+
   const isUserInFlight = (flight: any) => {
     return flight.players.some((player: any) => player.userId === user?.id);
+  };
+
+  const isFlightCreator = (flight: any) => {
+    return flight.createdBy === user?.id;
   };
 
   const canJoinFlight = (flight: any) => {
@@ -109,31 +132,58 @@ export const FlightLobby: React.FC<FlightLobbyProps> = ({ onCreateFlight, onJoin
                     </div>
                   </div>
                   
-                  <div className="flex gap-2">
-                    {isUserInFlight(flight) ? (
-                      <Button variant="outline" disabled>
-                        Already Joined
-                      </Button>
-                    ) : canJoinFlight(flight) ? (
-                      <Button 
-                        onClick={() => handleJoinFlight(flight.id)}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Joining...
-                          </>
-                        ) : (
-                          'Join Flight'
-                        )}
-                      </Button>
-                    ) : (
-                      <Button variant="outline" disabled>
-                        Flight Full
-                      </Button>
-                    )}
-                  </div>
+                   <div className="flex gap-2">
+                     {isFlightCreator(flight) && (
+                       <AlertDialog>
+                         <AlertDialogTrigger asChild>
+                           <Button variant="destructive" size="sm">
+                             <Trash2 className="h-4 w-4" />
+                           </Button>
+                         </AlertDialogTrigger>
+                         <AlertDialogContent>
+                           <AlertDialogHeader>
+                             <AlertDialogTitle>Delete Flight</AlertDialogTitle>
+                             <AlertDialogDescription>
+                               Are you sure you want to delete "{flight.name}"? This action cannot be undone and will remove all players from the flight.
+                             </AlertDialogDescription>
+                           </AlertDialogHeader>
+                           <AlertDialogFooter>
+                             <AlertDialogCancel>Cancel</AlertDialogCancel>
+                             <AlertDialogAction 
+                               onClick={() => handleDeleteFlight(flight.id)}
+                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                             >
+                               Delete Flight
+                             </AlertDialogAction>
+                           </AlertDialogFooter>
+                         </AlertDialogContent>
+                       </AlertDialog>
+                     )}
+                     
+                     {isUserInFlight(flight) ? (
+                       <Button variant="outline" disabled>
+                         Already Joined
+                       </Button>
+                     ) : canJoinFlight(flight) ? (
+                       <Button 
+                         onClick={() => handleJoinFlight(flight.id)}
+                         disabled={isLoading}
+                       >
+                         {isLoading ? (
+                           <>
+                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                             Joining...
+                           </>
+                         ) : (
+                           'Join Flight'
+                         )}
+                       </Button>
+                     ) : (
+                       <Button variant="outline" disabled>
+                         Flight Full
+                       </Button>
+                     )}
+                   </div>
                 </div>
               </CardContent>
             </Card>
