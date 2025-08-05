@@ -298,6 +298,17 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     try {
       setIsLoading(true);
 
+      // Check if this user is the flight creator
+      const isCreator = currentFlight.createdBy === user.id;
+
+      // Check how many players are in the flight
+      const { data: players, error: playersError } = await supabase
+        .from('flight_players')
+        .select('user_id')
+        .eq('flight_id', currentFlight.id);
+
+      if (playersError) throw playersError;
+
       // Remove user from flight players
       const { error } = await supabase
         .from('flight_players')
@@ -306,6 +317,29 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // If creator is leaving and there are other players
+      if (isCreator && players && players.length > 1) {
+        // Transfer ownership to another player
+        const otherPlayer = players.find(p => p.user_id !== user.id);
+        if (otherPlayer?.user_id) {
+          const { error: updateError } = await supabase
+            .from('flights')
+            .update({ created_by: otherPlayer.user_id })
+            .eq('id', currentFlight.id);
+
+          if (updateError) throw updateError;
+        }
+      } 
+      // If this was the last player or creator leaving alone, delete the flight
+      else if (players && players.length <= 1) {
+        const { error: deleteError } = await supabase
+          .from('flights')
+          .delete()
+          .eq('id', currentFlight.id);
+
+        if (deleteError) throw deleteError;
+      }
 
       setCurrentFlight(null);
       setCurrentPlayer(null);
