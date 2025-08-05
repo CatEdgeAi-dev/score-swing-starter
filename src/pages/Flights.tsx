@@ -61,16 +61,6 @@ const Flights = () => {
     setIsWorkflowModalOpen(true);
   };
 
-  // Emergency escape function
-  const handleEmergencyEscape = () => {
-    setCurrentFlight(null);
-    setIsWorkflowModalOpen(false);
-    setIsCreateModalOpen(false);
-    toast({
-      title: "Flight Cleared",
-      description: "Emergency flight state cleared. You can now navigate freely.",
-    });
-  };
 
   return (
     <ProtectedRoute>
@@ -84,23 +74,6 @@ const Flights = () => {
               Join existing flights or create your own lobby for multiplayer rounds
             </p>
             
-            {/* Emergency escape button */}
-            {(currentFlight || isWorkflowModalOpen) && (
-              <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-                <p className="text-sm text-muted-foreground mb-2">
-                  Having trouble navigating? Use the emergency escape below.
-                </p>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={handleEmergencyEscape}
-                  className="gap-2"
-                >
-                  <AlertTriangle className="h-4 w-4" />
-                  Emergency Exit Flight
-                </Button>
-              </div>
-            )}
           </div>
 
           <FlightLobby 
@@ -127,7 +100,10 @@ const Flights = () => {
         
         <FlightWorkflowModal 
           isOpen={isWorkflowModalOpen}
-          onClose={() => setIsWorkflowModalOpen(false)}
+          onClose={() => {
+            setIsWorkflowModalOpen(false);
+            setCurrentFlight(null); // Clear flight when modal closes
+          }}
         />
       </div>
     </ProtectedRoute>

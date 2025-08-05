@@ -33,19 +33,8 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
   const [currentStep, setCurrentStep] = useState<'setup' | 'validation' | 'ready'>('setup');
 
   useEffect(() => {
-    console.log('FlightWorkflowModal useEffect triggered:', {
-      currentFlightId: currentFlight?.id,
-      needsValidation,
-      userId: user?.id,
-      currentStep
-    });
-
     if (!currentFlight || !user) {
-      console.log('Missing flight or user, closing modal');
-      // Automatically close modal when flight is deleted or user is removed
-      if (isOpen) {
-        onClose();
-      }
+      // Don't auto-close the modal here - let the parent handle it
       return;
     }
 
@@ -97,12 +86,13 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
     };
 
     checkFlightStatus();
-  }, [currentFlight?.id, needsValidation, user?.id, currentStep]);
+  }, [currentFlight?.id, needsValidation, user?.id]); // Remove currentStep dependency to prevent loops
 
   const handleStartRound = () => {
     sessionStorage.setItem('fromRounds', 'true');
-    onClose();
     navigate('/scorecard');
+    // Close modal after navigation
+    setTimeout(() => onClose(), 100);
   };
 
   const getStepIndicator = () => {
