@@ -162,26 +162,36 @@ export const FlightHandicapSetup: React.FC = () => {
       const statusData: Record<string, HandicapStatus> = {};
       
       // Map database records to current flight players
-      players?.forEach((dbPlayer) => {
-        logger.debug('Processing DB player:', {
+      players?.forEach((dbPlayer, index) => {
+        logger.debug(`Processing DB player ${index}:`, {
           dbPlayer,
           searchingIn: currentFlight.players.map(p => ({ id: p.id, name: p.name, userId: p.userId }))
         });
         
         const player = findPlayerInFlight(dbPlayer, currentFlight.players);
         
-        logger.debug('Player match result:', { 
+        logger.debug(`Player match result ${index}:`, { 
           dbPlayerId: dbPlayer.id,
           dbPlayerUserId: dbPlayer.user_id,
           dbPlayerGuest: dbPlayer.guest_name,
+          dbPlayerHandicap: dbPlayer.handicap,
+          dbPlayerLocked: dbPlayer.handicap_locked,
           matchedPlayer: player ? { id: player.id, name: player.name, userId: player.userId } : null
         });
         
         if (player) {
+          logger.debug(`Setting data for player ${player.name}:`, {
+            playerId: player.id,
+            handicap: dbPlayer.handicap,
+            locked: dbPlayer.handicap_locked
+          });
+          
           if (dbPlayer.handicap !== null) {
             handicapData[player.id] = dbPlayer.handicap.toString();
+            logger.debug(`Added handicap for ${player.name}: ${dbPlayer.handicap}`);
           }
           statusData[player.id] = dbPlayer.handicap_locked ? 'ready' : 'editing';
+          logger.debug(`Set status for ${player.name}: ${dbPlayer.handicap_locked ? 'ready' : 'editing'}`);
         } else {
           logger.warn('Could not match DB player to flight player', { dbPlayer });
         }
@@ -530,6 +540,16 @@ export const FlightHandicapSetup: React.FC = () => {
           <div><strong>Handicaps State:</strong> {JSON.stringify(handicaps)}</div>
           <div><strong>Status State:</strong> {JSON.stringify(handicapStatuses)}</div>
           <div><strong>Real-time Channel:</strong> {realtimeChannel.current ? 'Connected' : 'Disconnected'}</div>
+          <Button 
+            onClick={() => {
+              console.log('Manual reload triggered by user', user?.id);
+              loadFlightHandicaps();
+            }}
+            size="sm"
+            variant="outline"
+          >
+            Force Reload Data
+          </Button>
         </CardContent>
       </Card>
       
