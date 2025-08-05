@@ -215,11 +215,17 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         player_order: index + 1
       }));
 
-      const { error: playersError } = await supabase
+      console.log('Creating flight with players:', flightData.players);
+      console.log('Players to insert into database:', playersToInsert);
+
+      const { data: insertedPlayers, error: playersError } = await supabase
         .from('flight_players')
-        .insert(playersToInsert);
+        .insert(playersToInsert)
+        .select();
 
       if (playersError) throw playersError;
+      
+      console.log('Successfully inserted players:', insertedPlayers);
 
       // Load the complete flight data
       await loadFlightData(newFlight.id);
