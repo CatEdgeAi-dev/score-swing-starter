@@ -174,54 +174,66 @@ export const FlightHandicapSetup: React.FC = () => {
     }
   };
 
-  const handleHandicapChange = async (playerId: string, handicap: string) => {
+  // Debounce function for database saves
+  const debouncedSave = React.useCallback(
+    (playerId: string, handicapValue: number | null, player: any) => {
+      const timeoutId = setTimeout(async () => {
+        try {
+          console.log('💾 Debounced save for player:', player.name, 'value:', handicapValue);
+          
+          const updateQuery = player.userId 
+            ? supabase
+                .from('flight_players')
+                .update({ handicap: handicapValue })
+                .eq('flight_id', currentFlight.id)
+                .eq('user_id', player.userId)
+            : supabase
+                .from('flight_players')
+                .update({ handicap: handicapValue })
+                .eq('id', playerId);
+
+          const { error } = await updateQuery;
+          if (error) throw error;
+          console.log('✅ Handicap saved successfully for', player.name);
+        } catch (error) {
+          console.error('Error saving handicap:', error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to save handicap. Please try again.",
+          });
+        }
+      }, 500); // 500ms debounce
+
+      return () => clearTimeout(timeoutId);
+    },
+    [currentFlight?.id, toast]
+  );
+
+  const handleHandicapChange = (playerId: string, handicap: string) => {
     // Only allow current user to edit their own handicap
     const player = currentFlight.players.find(p => p.id === playerId);
     if (!player || (player.userId !== user?.id && player.userId)) return;
     
     // Allow only valid handicap values (0-54 with up to 1 decimal place)
     if (handicap === '' || /^\d{0,2}(\.\d{0,1})?$/.test(handicap)) {
+      // Update local state immediately for responsive UI
       setHandicaps(prev => ({ ...prev, [playerId]: handicap }));
-      setHandicapStatuses(prev => ({ ...prev, [playerId]: 'editing' }));
       
-      console.log('💾 Saving handicap for player:', player.name, 'userId:', player.userId, 'value:', handicap);
+      // Only update status to editing if not already locked
+      setHandicapStatuses(prev => ({ 
+        ...prev, 
+        [playerId]: prev[playerId] === 'ready' ? 'ready' : 'editing' 
+      }));
       
-      // Save to database immediately using the correct user_id
-      try {
-        setHandicapStatuses(prev => ({ ...prev, [playerId]: 'syncing' }));
-        
-        const handicapValue = handicap === '' ? null : parseFloat(handicap);
-        
-        // For registered players, use user_id. For guests, use the player ID directly
-        const updateQuery = player.userId 
-          ? supabase
-              .from('flight_players')
-              .update({ handicap: handicapValue })
-              .eq('flight_id', currentFlight.id)
-              .eq('user_id', player.userId)
-          : supabase
-              .from('flight_players')
-              .update({ handicap: handicapValue })
-              .eq('id', playerId);
-
-        const { error } = await updateQuery;
-
-        if (error) throw error;
-        console.log('✅ Handicap saved successfully for', player.name);
-        
-        setHandicapStatuses(prev => ({ ...prev, [playerId]: 'editing' }));
-        
-        // Force reload after save to ensure all players see the update
-        setTimeout(() => loadFlightHandicaps(), 50);
-      } catch (error) {
-        console.error('Error saving handicap:', error);
-        setHandicapStatuses(prev => ({ ...prev, [playerId]: 'editing' }));
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to save handicap. Please try again.",
-        });
-      }
+      console.log('💾 Queuing save for player:', player.name, 'value:', handicap);
+      
+      // Debounced save to database
+      const handicapValue = handicap === '' ? null : parseFloat(handicap);
+      const cleanup = debouncedSave(playerId, handicapValue, player);
+      
+      // Clean up previous timeout if user keeps typing
+      return cleanup;
     }
   };
 
