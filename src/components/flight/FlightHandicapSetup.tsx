@@ -57,11 +57,9 @@ export const FlightHandicapSetup: React.FC = () => {
           filter: `flight_id=eq.${currentFlight.id}`,
         },
         (payload) => {
-          console.log('🔄 Real-time handicap update received:', payload);
-          console.log('🔄 Event type:', payload.eventType);
-          console.log('🔄 Updated record:', payload.new);
-          // Reload all handicaps to ensure all players see the latest state
-          loadFlightHandicaps();
+          console.log('🔄 Real-time update:', payload.eventType, payload.new);
+          // Reload handicaps when any player updates theirs
+          setTimeout(() => loadFlightHandicaps(), 100);
         }
       )
       .subscribe((status) => {
@@ -72,7 +70,7 @@ export const FlightHandicapSetup: React.FC = () => {
       console.log('🔄 Cleaning up real-time subscription for flight:', currentFlight.id);
       supabase.removeChannel(channel);
     };
-  }, [currentFlight]);
+  }, [currentFlight?.id]);
 
   const loadFlightHandicaps = async () => {
     if (!currentFlight) return;
@@ -112,7 +110,7 @@ export const FlightHandicapSetup: React.FC = () => {
         }
       });
       
-      // Update state with database values - completely replace for consistency
+      console.log('📊 Final handicap data loaded:', handicapData);
       setHandicaps(handicapData);
     } catch (error) {
       console.error('❌ Error loading flight handicaps:', error);
@@ -194,6 +192,9 @@ export const FlightHandicapSetup: React.FC = () => {
 
         if (error) throw error;
         console.log('✅ Handicap saved successfully for', player.name);
+        
+        // Force reload after save to ensure all players see the update
+        setTimeout(() => loadFlightHandicaps(), 50);
       } catch (error) {
         console.error('Error saving handicap:', error);
         toast({
