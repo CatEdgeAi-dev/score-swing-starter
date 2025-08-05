@@ -56,7 +56,12 @@ const App = () => (
                 <RouteLoadingWrapper>
                   <RoundSelection />
                 </RouteLoadingWrapper>
-              } />
+               } />
+               <Route path="/flights" element={
+                 <RouteLoadingWrapper>
+                   <Flights />
+                 </RouteLoadingWrapper>
+               } />
               <Route path="/scorecard" element={
                 <RouteLoadingWrapper>
                   <RouteGuard requiresRoundSetup={true}>
