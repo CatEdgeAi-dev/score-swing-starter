@@ -100,7 +100,7 @@ export const FlightHandicapSetup: React.FC = () => {
           });
           
           // Debounced reload to prevent excessive updates
-          setTimeout(() => loadFlightHandicaps(), 100);
+          setTimeout(() => loadFlightHandicaps(), 50);
         }
       )
       .subscribe();
@@ -131,9 +131,23 @@ export const FlightHandicapSetup: React.FC = () => {
    * Load current handicap data from database
    */
   const loadFlightHandicaps = useCallback(async () => {
-    if (!currentFlight?.id) return;
+    if (!currentFlight?.id) {
+      logger.debug('No flight ID available for loading handicaps');
+      return;
+    }
+
+    if (!currentFlight?.players?.length) {
+      logger.debug('No players available yet, skipping handicap load');
+      return;
+    }
 
     try {
+      logger.debug('Loading flight handicaps', { 
+        flightId: currentFlight.id, 
+        playersCount: currentFlight.players.length,
+        players: currentFlight.players.map(p => ({ id: p.id, name: p.name, userId: p.userId }))
+      });
+
       const { data: players, error } = await supabase
         .from('flight_players')
         .select('id, user_id, guest_name, handicap, handicap_locked, player_order')
@@ -142,28 +156,50 @@ export const FlightHandicapSetup: React.FC = () => {
 
       if (error) throw error;
 
+      logger.debug('Raw database data:', players);
+
       const handicapData: Record<string, string> = {};
       const statusData: Record<string, HandicapStatus> = {};
       
       // Map database records to current flight players
       players?.forEach((dbPlayer) => {
+        logger.debug('Processing DB player:', {
+          dbPlayer,
+          searchingIn: currentFlight.players.map(p => ({ id: p.id, name: p.name, userId: p.userId }))
+        });
+        
         const player = findPlayerInFlight(dbPlayer, currentFlight.players);
+        
+        logger.debug('Player match result:', { 
+          dbPlayerId: dbPlayer.id,
+          dbPlayerUserId: dbPlayer.user_id,
+          dbPlayerGuest: dbPlayer.guest_name,
+          matchedPlayer: player ? { id: player.id, name: player.name, userId: player.userId } : null
+        });
         
         if (player) {
           if (dbPlayer.handicap !== null) {
             handicapData[player.id] = dbPlayer.handicap.toString();
           }
           statusData[player.id] = dbPlayer.handicap_locked ? 'ready' : 'editing';
+        } else {
+          logger.warn('Could not match DB player to flight player', { dbPlayer });
         }
       });
       
-      logger.debug('Loaded handicap data', { handicapData, statusData });
+      logger.info('Final handicap data loaded', { 
+        handicapData, 
+        statusData,
+        playersProcessed: players?.length,
+        matchedPlayers: Object.keys(handicapData).length
+      });
+      
       setHandicaps(handicapData);
       setHandicapStatuses(statusData);
     } catch (error) {
       logger.error('Failed to load flight handicaps', error);
     }
-  }, [currentFlight?.id, currentFlight?.players]);
+  }, [currentFlight?.id]);
 
   /**
    * Load player profiles to auto-fill handicap data
@@ -216,19 +252,56 @@ export const FlightHandicapSetup: React.FC = () => {
    * Helper function to find a player in the flight based on database record
    */
   const findPlayerInFlight = useCallback((dbPlayer: any, players: any[]) => {
-    return players.find(p => {
+    if (!players || !Array.isArray(players)) {
+      logger.warn('Invalid players array provided to findPlayerInFlight', { players });
+      return null;
+    }
+
+    const result = players.find(p => {
       // For registered players, match by userId
       if (dbPlayer.user_id && p.userId) {
-        return p.userId === dbPlayer.user_id;
+        const match = p.userId === dbPlayer.user_id;
+        logger.debug('Matching by userId', { 
+          dbUserId: dbPlayer.user_id, 
+          playerUserId: p.userId, 
+          match 
+        });
+        return match;
       }
       // For guest players, match by name
       if (!dbPlayer.user_id && !p.userId) {
-        return p.name === dbPlayer.guest_name || 
-               (p.name && dbPlayer.guest_name && 
-                p.name.toLowerCase() === dbPlayer.guest_name.toLowerCase());
+        const exactMatch = p.name === dbPlayer.guest_name;
+        const caseInsensitiveMatch = p.name && dbPlayer.guest_name && 
+               p.name.toLowerCase() === dbPlayer.guest_name.toLowerCase();
+        const match = exactMatch || caseInsensitiveMatch;
+        logger.debug('Matching by guest name', { 
+          playerName: p.name, 
+          dbGuestName: dbPlayer.guest_name, 
+          exactMatch, 
+          caseInsensitiveMatch, 
+          match 
+        });
+        return match;
       }
       return false;
     });
+
+    if (!result) {
+      logger.warn('No matching player found', { 
+        dbPlayer: { 
+          id: dbPlayer.id, 
+          user_id: dbPlayer.user_id, 
+          guest_name: dbPlayer.guest_name 
+        },
+        availablePlayers: players.map(p => ({ 
+          id: p.id, 
+          name: p.name, 
+          userId: p.userId 
+        }))
+      });
+    }
+
+    return result;
   }, []);
 
   /**
@@ -445,6 +518,21 @@ export const FlightHandicapSetup: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Temporary Debug Panel */}
+      <Card className="border-yellow-200 bg-yellow-50">
+        <CardHeader>
+          <CardTitle className="text-sm text-yellow-800">Debug Panel (Temporary)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-xs">
+          <div><strong>Current User:</strong> {user?.id}</div>
+          <div><strong>Flight ID:</strong> {currentFlight?.id}</div>
+          <div><strong>Players in Flight:</strong> {JSON.stringify(currentFlight?.players?.map(p => ({ id: p.id, name: p.name, userId: p.userId })))}</div>
+          <div><strong>Handicaps State:</strong> {JSON.stringify(handicaps)}</div>
+          <div><strong>Status State:</strong> {JSON.stringify(handicapStatuses)}</div>
+          <div><strong>Real-time Channel:</strong> {realtimeChannel.current ? 'Connected' : 'Disconnected'}</div>
+        </CardContent>
+      </Card>
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
