@@ -528,31 +528,6 @@ export const FlightHandicapSetup: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Temporary Debug Panel */}
-      <Card className="border-yellow-200 bg-yellow-50">
-        <CardHeader>
-          <CardTitle className="text-sm text-yellow-800">Debug Panel (Temporary)</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-xs">
-          <div><strong>Current User:</strong> {user?.id}</div>
-          <div><strong>Flight ID:</strong> {currentFlight?.id}</div>
-          <div><strong>Players in Flight:</strong> {JSON.stringify(currentFlight?.players?.map(p => ({ id: p.id, name: p.name, userId: p.userId })))}</div>
-          <div><strong>Handicaps State:</strong> {JSON.stringify(handicaps)}</div>
-          <div><strong>Status State:</strong> {JSON.stringify(handicapStatuses)}</div>
-          <div><strong>Real-time Channel:</strong> {realtimeChannel.current ? 'Connected' : 'Disconnected'}</div>
-          <Button 
-            onClick={() => {
-              console.log('Manual reload triggered by user', user?.id);
-              loadFlightHandicaps();
-            }}
-            size="sm"
-            variant="outline"
-          >
-            Force Reload Data
-          </Button>
-        </CardContent>
-      </Card>
-      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
