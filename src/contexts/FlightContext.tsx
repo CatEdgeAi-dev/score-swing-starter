@@ -417,12 +417,20 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     try {
       setIsLoading(true);
 
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+
       // Fetch flights for today
-      const { data: flights, error } = await supabase
-        .from('flights')
-        .select('*')
-        .eq('date_played', new Date().toISOString().split('T')[0])
-        .order('created_at', { ascending: false });
+      const { data: flights, error } = await Promise.race([
+        supabase
+          .from('flights')
+          .select('*')
+          .eq('date_played', new Date().toISOString().split('T')[0])
+          .order('created_at', { ascending: false }),
+        timeoutPromise
+      ]) as any;
 
       if (error) throw error;
 

@@ -8,10 +8,14 @@ import { FlightWorkflowModal } from '@/components/flight/FlightWorkflowModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFlightContext } from '@/contexts/FlightContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle } from 'lucide-react';
 
 const Flights = () => {
   const { user } = useAuth();
-  const { createFlight, currentFlight } = useFlightContext();
+  const { createFlight, currentFlight, setCurrentFlight } = useFlightContext();
+  const { toast } = useToast();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isWorkflowModalOpen, setIsWorkflowModalOpen] = useState(false);
 
@@ -57,6 +61,17 @@ const Flights = () => {
     setIsWorkflowModalOpen(true);
   };
 
+  // Emergency escape function
+  const handleEmergencyEscape = () => {
+    setCurrentFlight(null);
+    setIsWorkflowModalOpen(false);
+    setIsCreateModalOpen(false);
+    toast({
+      title: "Flight Cleared",
+      description: "Emergency flight state cleared. You can now navigate freely.",
+    });
+  };
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background flex flex-col">
@@ -68,6 +83,24 @@ const Flights = () => {
             <p className="text-muted-foreground">
               Join existing flights or create your own lobby for multiplayer rounds
             </p>
+            
+            {/* Emergency escape button */}
+            {(currentFlight || isWorkflowModalOpen) && (
+              <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Having trouble navigating? Use the emergency escape below.
+                </p>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={handleEmergencyEscape}
+                  className="gap-2"
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  Emergency Exit Flight
+                </Button>
+              </div>
+            )}
           </div>
 
           <FlightLobby 

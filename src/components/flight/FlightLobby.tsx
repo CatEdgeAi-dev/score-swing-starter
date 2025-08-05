@@ -29,7 +29,7 @@ export const FlightLobby: React.FC<FlightLobbyProps> = ({ onCreateFlight, onJoin
 
   useEffect(() => {
     refreshFlights();
-  }, [refreshFlights]);
+  }, []); // Remove refreshFlights dependency to prevent infinite loops
 
   const handleJoinFlight = async (flightId: string) => {
     try {
