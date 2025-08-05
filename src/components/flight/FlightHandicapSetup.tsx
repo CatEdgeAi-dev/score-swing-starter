@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export const FlightHandicapSetup: React.FC = () => {
-  const { currentFlight, setCurrentFlight, startValidation } = useFlightContext();
+  const { currentFlight, setCurrentFlight, startValidation, leaveFlight } = useFlightContext();
   const { user } = useAuth();
   const { toast } = useToast();
   const [handicaps, setHandicaps] = useState<{ [playerId: string]: string }>({});
@@ -41,6 +41,7 @@ export const FlightHandicapSetup: React.FC = () => {
           filter: `flight_id=eq.${currentFlight.id}`,
         },
         (payload) => {
+          console.log('Real-time handicap update received:', payload);
           const playerId = payload.new.id;
           const handicap = payload.new.handicap;
           if (handicap !== null) {
@@ -61,6 +62,8 @@ export const FlightHandicapSetup: React.FC = () => {
   const loadFlightHandicaps = async () => {
     if (!currentFlight) return;
 
+    console.log('Loading handicaps for flight:', currentFlight.id);
+
     try {
       const { data, error } = await supabase
         .from('flight_players')
@@ -69,6 +72,8 @@ export const FlightHandicapSetup: React.FC = () => {
 
       if (error) throw error;
 
+      console.log('Loaded flight players handicaps:', data);
+
       const handicapData: { [playerId: string]: string } = {};
       data.forEach(player => {
         if (player.handicap !== null) {
@@ -76,6 +81,7 @@ export const FlightHandicapSetup: React.FC = () => {
         }
       });
       setHandicaps(handicapData);
+      console.log('Set handicaps state:', handicapData);
     } catch (error) {
       console.error('Error loading flight handicaps:', error);
     }
@@ -112,6 +118,8 @@ export const FlightHandicapSetup: React.FC = () => {
     if (handicap === '' || /^\d{0,2}(\.\d{0,1})?$/.test(handicap)) {
       setHandicaps(prev => ({ ...prev, [playerId]: handicap }));
       
+      console.log('Saving handicap for player:', playerId, 'value:', handicap);
+      
       // Save to database immediately
       try {
         const handicapValue = handicap === '' ? null : parseFloat(handicap);
@@ -121,6 +129,7 @@ export const FlightHandicapSetup: React.FC = () => {
           .eq('id', playerId);
 
         if (error) throw error;
+        console.log('Handicap saved successfully');
       } catch (error) {
         console.error('Error saving handicap:', error);
         toast({
@@ -297,6 +306,16 @@ export const FlightHandicapSetup: React.FC = () => {
             className="w-full"
           >
             {isSubmitting ? 'Setting up...' : 'Continue to Validation'}
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => {
+              leaveFlight();
+            }}
+            className="w-full"
+          >
+            Exit Flight
           </Button>
         </CardContent>
       </Card>
