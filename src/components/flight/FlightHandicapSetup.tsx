@@ -116,15 +116,29 @@ export const FlightHandicapSetup: React.FC = () => {
 
         // Find the player in currentFlight that corresponds to this database record
         const player = currentFlight.players.find(p => {
+          console.log(`🔍 Comparing DB record ${index + 1} with frontend player:`, {
+            dbUserId: dbPlayer.user_id,
+            dbGuestName: dbPlayer.guest_name,
+            frontendPlayerId: p.id,
+            frontendPlayerUserId: p.userId,
+            frontendPlayerName: p.name,
+            frontendPlayerIsRegistered: p.isRegistered
+          });
+          
           // For registered players, match by userId
           if (dbPlayer.user_id && p.userId) {
-            return p.userId === dbPlayer.user_id;
+            const matches = p.userId === dbPlayer.user_id;
+            console.log(`✅ Registered player match check: ${matches} (${p.userId} === ${dbPlayer.user_id})`);
+            return matches;
           }
           // For guest players, match by name or guest_name
           if (!dbPlayer.user_id && !p.userId) {
-            return p.name === dbPlayer.guest_name || 
+            const matches = p.name === dbPlayer.guest_name || 
                    (p.name && dbPlayer.guest_name && p.name.toLowerCase() === dbPlayer.guest_name.toLowerCase());
+            console.log(`✅ Guest player match check: ${matches} (${p.name} === ${dbPlayer.guest_name})`);
+            return matches;
           }
+          console.log(`❌ No match pattern applied for this combination`);
           return false;
         });
         
