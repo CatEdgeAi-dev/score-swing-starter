@@ -464,6 +464,38 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [user, currentFlight, toast, refreshFlights]);
 
+  // Load current user's flight if they're already in one
+  const loadCurrentUserFlight = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      // Check if user is in any active flight
+      const { data: userFlight, error } = await supabase
+        .from('flight_players')
+        .select(`
+          flight_id,
+          flights (
+            id,
+            name,
+            course_name,
+            date_played,
+            weather,
+            created_by
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('flights.date_played', new Date().toISOString().split('T')[0])
+        .single();
+
+      if (!error && userFlight?.flights) {
+        await loadFlightData(userFlight.flight_id);
+      }
+    } catch (error) {
+      // User not in any flight - this is normal
+      console.log('User not in any current flight');
+    }
+  }, [user, loadFlightData]);
+
 
   // Set up realtime subscriptions
   useEffect(() => {
@@ -500,11 +532,12 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // Initial load
     refreshFlights();
+    loadCurrentUserFlight();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refreshFlights, loadFlightData, currentFlight]);
+  }, [user, refreshFlights, loadCurrentUserFlight, currentFlight]);
 
   const switchToPlayer = (player: Player) => {
     setCurrentPlayer(player);
