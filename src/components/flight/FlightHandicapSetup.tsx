@@ -63,26 +63,52 @@ export const FlightHandicapSetup: React.FC = () => {
     if (!currentFlight) return;
 
     console.log('Loading handicaps for flight:', currentFlight.id);
+    console.log('currentFlight.players:', currentFlight.players);
 
     try {
       const { data, error } = await supabase
         .from('flight_players')
-        .select('id, handicap')
+        .select('user_id, guest_name, handicap')
         .eq('flight_id', currentFlight.id);
 
       if (error) throw error;
 
-      console.log('Loaded flight players handicaps:', data);
+      console.log('Loaded flight players handicaps from DB:', data);
 
       const handicapData: { [playerId: string]: string } = {};
-      data.forEach(player => {
-        if (player.handicap !== null) {
-          handicapData[player.id] = player.handicap.toString();
+      
+      // Map each player in currentFlight to their handicap from database
+      currentFlight.players.forEach(player => {
+        console.log(`Mapping player: ${player.name} (ID: ${player.id})`);
+        
+        // Find the corresponding database record
+        const dbRecord = data.find(dbPlayer => {
+          // For registered users, match by user_id
+          if (dbPlayer.user_id === player.id) {
+            console.log(`  Found by user_id match: ${dbPlayer.user_id}`);
+            return true;
+          }
+          // For guest players, match by guest_name
+          if (dbPlayer.guest_name === player.name) {
+            console.log(`  Found by guest_name match: ${dbPlayer.guest_name}`);
+            return true;
+          }
+          return false;
+        });
+        
+        if (dbRecord && dbRecord.handicap !== null) {
+          handicapData[player.id] = dbRecord.handicap.toString();
+          console.log(`  Set handicap: ${dbRecord.handicap}`);
+        } else {
+          console.log(`  No handicap found in DB for this player`);
         }
       });
       
+      console.log('Final handicap mapping:', handicapData);
+      
       // Only update state if there are actual changes to prevent overwriting user input
       setHandicaps(prev => {
+        console.log('Previous handicaps state:', prev);
         const hasChanges = Object.keys(handicapData).some(key => 
           prev[key] !== handicapData[key]
         ) || Object.keys(prev).some(key => 
@@ -90,10 +116,11 @@ export const FlightHandicapSetup: React.FC = () => {
         );
         
         if (hasChanges) {
-          console.log('Updating handicaps state:', handicapData);
+          console.log('Updating handicaps state with:', handicapData);
           return { ...prev, ...handicapData };
         }
         
+        console.log('No changes needed, keeping previous state');
         return prev;
       });
     } catch (error) {
