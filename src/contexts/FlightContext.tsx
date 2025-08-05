@@ -624,7 +624,7 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [user, loadFlightData, toast]);
 
 
-  // Set up realtime subscriptions
+  // Set up realtime subscriptions (only when user changes)
   useEffect(() => {
     if (!user) return;
 
@@ -649,8 +649,10 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           table: 'flight_players'
         },
         () => {
-          if (currentFlight) {
-            loadFlightData(currentFlight.id);
+          // Get current flight ID at the time of the event
+          const currentFlightId = currentFlight?.id;
+          if (currentFlightId) {
+            loadFlightData(currentFlightId);
           }
           refreshFlights();
         }
@@ -664,7 +666,7 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refreshFlights, loadCurrentUserFlight, currentFlight]);
+  }, [user]); // Removed dependencies that cause loops
 
   const switchToPlayer = (player: Player) => {
     setCurrentPlayer(player);

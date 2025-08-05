@@ -19,12 +19,8 @@ const Flights = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isWorkflowModalOpen, setIsWorkflowModalOpen] = useState(false);
 
-  // Check if user is already in a flight and show workflow modal
-  useEffect(() => {
-    if (currentFlight && !isCreateModalOpen) {
-      setIsWorkflowModalOpen(true);
-    }
-  }, [currentFlight, isCreateModalOpen]);
+  // Open workflow modal only when a flight is created/joined
+  // Remove automatic opening to prevent loops
 
   const getUserName = () => {
     if (user?.email) {
@@ -47,6 +43,7 @@ const Flights = () => {
     try {
       await createFlight(flightData);
       setIsCreateModalOpen(false);
+      // Explicitly open workflow modal after creation
       setIsWorkflowModalOpen(true);
     } catch (error) {
       console.error('Failed to create flight:', error);
@@ -58,7 +55,10 @@ const Flights = () => {
   };
 
   const handleJoinFlight = () => {
-    setIsWorkflowModalOpen(true);
+    // Only open if there's a current flight
+    if (currentFlight) {
+      setIsWorkflowModalOpen(true);
+    }
   };
 
 

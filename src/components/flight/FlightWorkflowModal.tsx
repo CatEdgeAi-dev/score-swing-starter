@@ -31,13 +31,14 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<'setup' | 'validation' | 'ready'>('setup');
+  const [hasCheckedStatus, setHasCheckedStatus] = useState(false);
 
+  // Check flight status only once when modal opens
   useEffect(() => {
-    if (!currentFlight || !user) {
+    if (!currentFlight || !user || !isOpen || hasCheckedStatus) {
       return;
     }
 
-    // Only check flight status once when modal opens, not continuously
     const checkFlightStatus = async () => {
       try {
         const { data: players, error } = await supabase
@@ -56,17 +57,25 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
         } else {
           setCurrentStep('ready');
         }
+        
+        setHasCheckedStatus(true);
       } catch (error) {
         console.error('Error checking flight status:', error);
         setCurrentStep('setup');
+        setHasCheckedStatus(true);
       }
     };
 
-    // Only run once when the modal opens
-    if (isOpen && currentStep === 'setup') {
-      checkFlightStatus();
+    checkFlightStatus();
+  }, [isOpen, currentFlight?.id, user?.id, needsValidation, hasCheckedStatus]);
+
+  // Reset check status when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setHasCheckedStatus(false);
+      setCurrentStep('setup');
     }
-  }, [isOpen, currentFlight?.id, user?.id]); // Removed needsValidation and currentStep to prevent loops
+  }, [isOpen]);
 
   const handleStartRound = () => {
     navigate('/scorecard');
