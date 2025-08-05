@@ -68,6 +68,11 @@ const App = () => (
                   <RoundHistory />
                 </RouteLoadingWrapper>
               } />
+              <Route path="/stats" element={
+                <RouteLoadingWrapper>
+                  <Stats />
+                </RouteLoadingWrapper>
+              } />
               <Route path="/performance" element={
                 <RouteLoadingWrapper>
                   <Stats />
