@@ -34,15 +34,12 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
 
   useEffect(() => {
     if (!currentFlight || !user) {
-      // Don't auto-close the modal here - let the parent handle it
       return;
     }
 
+    // Only check flight status once when modal opens, not continuously
     const checkFlightStatus = async () => {
       try {
-        console.log('Checking flight status for flight:', currentFlight.id);
-        
-        // Check if all players have handicaps set in the database
         const { data: players, error } = await supabase
           .from('flight_players')
           .select('id, handicap')
@@ -51,33 +48,13 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
         if (error) throw error;
 
         const allHandicapsSet = players.every(p => p.handicap !== null);
-        console.log('Flight status check results:', {
-          players,
-          allHandicapsSet,
-          needsValidation,
-          currentStep
-        });
-        
-        let newStep: 'setup' | 'validation' | 'ready';
         
         if (!allHandicapsSet) {
-          newStep = 'setup';
-          console.log('Setting step to setup - not all handicaps set');
+          setCurrentStep('setup');
         } else if (needsValidation) {
-          newStep = 'validation';
-          console.log('Setting step to validation - needs validation is true');
+          setCurrentStep('validation');
         } else {
-          newStep = 'ready';
-          console.log('Setting step to ready - all handicaps set and no validation needed');
-        }
-        
-        console.log('Current step before update:', currentStep, 'New step:', newStep);
-        
-        if (currentStep !== newStep) {
-          console.log('Step is changing from', currentStep, 'to', newStep);
-          setCurrentStep(newStep);
-        } else {
-          console.log('Step remains the same:', currentStep);
+          setCurrentStep('ready');
         }
       } catch (error) {
         console.error('Error checking flight status:', error);
@@ -85,15 +62,17 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
       }
     };
 
-    checkFlightStatus();
-  }, [currentFlight?.id, needsValidation, user?.id]); // Remove currentStep dependency to prevent loops
+    // Only run once when the modal opens
+    if (isOpen && currentStep === 'setup') {
+      checkFlightStatus();
+    }
+  }, [isOpen, currentFlight?.id, user?.id]); // Removed needsValidation and currentStep to prevent loops
 
   const handleStartRound = () => {
-    sessionStorage.setItem('fromRounds', 'true');
     navigate('/scorecard');
-    // Close modal after navigation
-    setTimeout(() => onClose(), 100);
+    onClose();
   };
+
 
   const getStepIndicator = () => {
     const steps = [
@@ -195,7 +174,7 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
