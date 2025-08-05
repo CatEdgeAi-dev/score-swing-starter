@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +20,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { FlightHandicapSetup } from './FlightHandicapSetup';
 import { FlightHandicapValidation } from './FlightHandicapValidation';
+import { useAsyncOperation } from '@/hooks/useAsyncOperation';
+import { supabase } from '@/integrations/supabase/client';
 
 export const FlightManagementPanel: React.FC = () => {
   const navigate = useNavigate();
@@ -43,27 +45,43 @@ export const FlightManagementPanel: React.FC = () => {
   // Check validation progress
   const allValidationsComplete = validationStatuses.length > 0 && 
     validationStatuses.every(status => status.status === 'validated');
+  
+  // Delete flight operation
+  const deleteFlightOperation = useAsyncOperation(
+    async () => {
+      if (!currentFlight) return;
+      
+      const { error } = await supabase
+        .from('flights')
+        .delete()
+        .eq('id', currentFlight.id);
+        
+      if (error) throw error;
+    },
+    {
+      showSuccessToast: true,
+      successMessage: `${currentFlight?.name} has been deleted`,
+      errorMessage: 'Failed to delete flight'
+    }
+  );
 
-  const handleLeaveFlight = () => {
-    leaveFlight();
+  const handleLeaveFlight = useCallback(async () => {
+    await leaveFlight();
     setShowLeaveDialog(false);
     toast({
       title: "Left Flight",
       description: `You have left ${currentFlight.name}`,
     });
     navigate('/rounds');
-  };
+  }, [leaveFlight, currentFlight.name, toast, navigate]);
 
-  const handleDeleteFlight = () => {
-    // TODO: Implement flight deletion
-    setShowDeleteDialog(false);
-    toast({
-      title: "Flight Deleted",
-      description: `${currentFlight.name} has been deleted`,
-      variant: "destructive"
-    });
-    navigate('/rounds');
-  };
+  const handleDeleteFlight = useCallback(async () => {
+    const result = await deleteFlightOperation.execute();
+    if (result !== null) {
+      setShowDeleteDialog(false);
+      navigate('/rounds');
+    }
+  }, [deleteFlightOperation, navigate]);
 
   // Show handicap setup if handicaps aren't set
   if (!allHandicapsSet) {
