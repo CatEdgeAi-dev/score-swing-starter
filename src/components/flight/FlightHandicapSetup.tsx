@@ -57,34 +57,82 @@ export const FlightHandicapSetup: React.FC = () => {
     if (!currentFlight) return;
 
     try {
+      // ===== DEBUG: HANDICAP LOADING START =====
+      console.group('🎲 HANDICAP LOADING DEBUG');
+      console.log('🔍 Loading handicaps for flight:', currentFlight.id);
+      console.log('👥 Current flight players in state:', currentFlight.players.map(p => ({
+        id: p.id,
+        name: p.name,
+        userId: p.userId,
+        isRegistered: p.isRegistered
+      })));
+      // ===== DEBUG: HANDICAP LOADING END =====
+
       const { data: players, error } = await supabase
         .from('flight_players')
-        .select('user_id, guest_name, handicap')
-        .eq('flight_id', currentFlight.id);
+        .select('id, user_id, guest_name, handicap, player_order')
+        .eq('flight_id', currentFlight.id)
+        .order('player_order');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Database query failed:', error);
+        throw error;
+      }
+
+      console.log('📥 Raw database response:', players);
+      console.log('📊 Database players summary:', {
+        totalRecords: players?.length || 0,
+        registeredPlayers: players?.filter(p => p.user_id).length || 0,
+        guestPlayers: players?.filter(p => p.guest_name).length || 0,
+        playersWithHandicaps: players?.filter(p => p.handicap !== null).length || 0
+      });
 
       const handicapData: { [playerId: string]: string } = {};
       
       // Map database records to player IDs correctly
       // The players array comes from flight_players records, so we can match by the flight_players.id
-      players.forEach(dbPlayer => {
+      players?.forEach((dbPlayer, index) => {
+        console.log(`🔄 Processing DB record ${index + 1}:`, {
+          dbRecord: dbPlayer,
+          hasUserId: !!dbPlayer.user_id,
+          hasGuestName: !!dbPlayer.guest_name,
+          hasHandicap: dbPlayer.handicap !== null
+        });
+
         // Find the player in currentFlight that corresponds to this database record
-        const player = currentFlight.players.find(p => p.userId === dbPlayer.user_id);
+        const player = currentFlight.players.find(p => {
+          // For registered players, match by userId
+          if (dbPlayer.user_id && p.userId) {
+            return p.userId === dbPlayer.user_id;
+          }
+          // For guest players, we need to match by position since guest_name might be different
+          return false; // This is where the issue might be!
+        });
+        
+        console.log(`🎯 Matching attempt for DB record ${index + 1}:`, {
+          dbPlayer: dbPlayer,
+          foundPlayer: player ? { id: player.id, name: player.name, userId: player.userId } : null,
+          matchSuccessful: !!player
+        });
         
         if (player && dbPlayer.handicap !== null) {
           handicapData[player.id] = dbPlayer.handicap.toString();
+          console.log(`✅ Handicap mapped: ${player.name} -> ${dbPlayer.handicap}`);
+        } else if (dbPlayer.handicap !== null) {
+          console.warn(`⚠️ Orphaned handicap: DB record has handicap but no matching frontend player`, dbPlayer);
         }
       });
       
-      console.log('Loading handicaps from DB:', players);
-      console.log('Mapped handicap data:', handicapData);
-      console.log('Current flight players:', currentFlight.players);
+      console.log('📋 Final handicap mapping:', handicapData);
+      console.log('🎯 Players with handicaps in state:', Object.keys(handicapData).length);
+      console.groupEnd();
+      // ===== DEBUG: FINAL MAPPING END =====
       
       // Update state with database values - completely replace for consistency
       setHandicaps(handicapData);
     } catch (error) {
-      console.error('Error loading flight handicaps:', error);
+      console.error('❌ Error loading flight handicaps:', error);
+      console.groupEnd();
     }
   };
 

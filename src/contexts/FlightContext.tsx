@@ -193,6 +193,23 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     try {
       setIsLoading(true);
 
+      // ===== DEBUG: FLIGHT CREATION START =====
+      console.group('🎯 FLIGHT CREATION DEBUG');
+      console.log('📋 Input flight data:', {
+        name: flightData.name,
+        courseName: flightData.courseName,
+        playersCount: flightData.players.length,
+        createdBy: user.id
+      });
+      console.log('👥 Players array received:', flightData.players.map(p => ({
+        id: p.id,
+        name: p.name,
+        isRegistered: p.isRegistered,
+        userId: p.userId,
+        hasUserId: !!p.userId
+      })));
+      // ===== DEBUG: FLIGHT CREATION END =====
+
       // Create flight in database
       const { data: newFlight, error: flightError } = await supabase
         .from('flights')
@@ -205,7 +222,12 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         .select()
         .single();
 
-      if (flightError) throw flightError;
+      if (flightError) {
+        console.error('❌ Flight creation failed:', flightError);
+        throw flightError;
+      }
+
+      console.log('✅ Flight created successfully:', newFlight);
 
       // Add flight players
       const playersToInsert = flightData.players.map((player, index) => ({
@@ -215,17 +237,39 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         player_order: index + 1
       }));
 
-      console.log('Creating flight with players:', flightData.players);
-      console.log('Players to insert into database:', playersToInsert);
+      // ===== DEBUG: PLAYER INSERTION START =====
+      console.log('🔄 Mapping players for database insertion:');
+      flightData.players.forEach((player, index) => {
+        console.log(`Player ${index + 1}:`, {
+          originalPlayer: player,
+          mappedForDB: playersToInsert[index],
+          willBeGuest: !player.userId,
+          willBeRegistered: !!player.userId
+        });
+      });
+      console.log('📤 Final payload for flight_players table:', playersToInsert);
+      // ===== DEBUG: PLAYER INSERTION END =====
 
       const { data: insertedPlayers, error: playersError } = await supabase
         .from('flight_players')
         .insert(playersToInsert)
         .select();
 
-      if (playersError) throw playersError;
+      if (playersError) {
+        console.error('❌ Player insertion failed:', playersError);
+        console.log('🔍 Failed payload was:', playersToInsert);
+        throw playersError;
+      }
       
-      console.log('Successfully inserted players:', insertedPlayers);
+      console.log('✅ Players inserted successfully:', insertedPlayers);
+      console.log('📊 Insertion summary:', {
+        attemptedToInsert: playersToInsert.length,
+        actuallyInserted: insertedPlayers?.length || 0,
+        registeredPlayers: insertedPlayers?.filter(p => p.user_id).length || 0,
+        guestPlayers: insertedPlayers?.filter(p => p.guest_name).length || 0
+      });
+      console.groupEnd();
+      // ===== DEBUG: FINAL SUMMARY END =====
 
       // Load the complete flight data
       await loadFlightData(newFlight.id);

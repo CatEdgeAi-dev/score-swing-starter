@@ -87,13 +87,43 @@ export const FlightCreationForm: React.FC<FlightCreationFormProps> = ({
 
     try {
       setIsCreating(true);
+      
+      // ===== DEBUG: FORM SUBMISSION START =====
+      console.group('📝 FLIGHT CREATION FORM DEBUG');
+      console.log('🚀 Form submission initiated');
+      console.log('📋 Flight details:', {
+        name: flightName,
+        courseName: courseName,
+        playerCount: players.length
+      });
+      console.log('👥 Players being submitted:', players.map((p, index) => ({
+        index: index + 1,
+        id: p.id,
+        name: p.name,
+        isRegistered: p.isRegistered,
+        userId: p.userId,
+        email: p.email,
+        hasUserId: !!p.userId,
+        playerType: p.isRegistered ? 'REGISTERED' : 'GUEST'
+      })));
+      console.log('🔍 Guest players analysis:', {
+        totalGuests: players.filter(p => !p.isRegistered).length,
+        guestPlayers: players.filter(p => !p.isRegistered).map(p => ({
+          name: p.name,
+          hasUserId: !!p.userId,
+          id: p.id
+        }))
+      });
+      console.groupEnd();
+      // ===== DEBUG: FORM SUBMISSION END =====
+      
       await onCreateFlight({
         name: flightName,
         courseName: courseName,
         players: players
       });
     } catch (error) {
-      console.error('Failed to create flight:', error);
+      console.error('❌ Failed to create flight:', error);
     } finally {
       setIsCreating(false);
     }
