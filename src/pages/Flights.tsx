@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TopBar } from '@/components/navigation/TopBar';
 import { BottomTabs } from '@/components/navigation/BottomTabs';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -11,9 +11,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 
 const Flights = () => {
   const { user } = useAuth();
-  const { createFlight } = useFlightContext();
+  const { createFlight, currentFlight } = useFlightContext();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isWorkflowModalOpen, setIsWorkflowModalOpen] = useState(false);
+
+  // Check if user is already in a flight and show workflow modal
+  useEffect(() => {
+    if (currentFlight && !isCreateModalOpen) {
+      setIsWorkflowModalOpen(true);
+    }
+  }, [currentFlight, isCreateModalOpen]);
 
   const getUserName = () => {
     if (user?.email) {
@@ -46,6 +53,10 @@ const Flights = () => {
     setIsCreateModalOpen(true);
   };
 
+  const handleJoinFlight = () => {
+    setIsWorkflowModalOpen(true);
+  };
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background flex flex-col">
@@ -59,7 +70,10 @@ const Flights = () => {
             </p>
           </div>
 
-          <FlightLobby onCreateFlight={handleOpenCreateModal} />
+          <FlightLobby 
+            onCreateFlight={handleOpenCreateModal} 
+            onJoinFlight={handleJoinFlight}
+          />
         </div>
         
         <BottomTabs />

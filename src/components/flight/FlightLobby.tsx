@@ -9,9 +9,10 @@ import { PageLoading } from '@/components/ui/page-loading';
 
 interface FlightLobbyProps {
   onCreateFlight: () => void;
+  onJoinFlight?: () => void;
 }
 
-export const FlightLobby: React.FC<FlightLobbyProps> = ({ onCreateFlight }) => {
+export const FlightLobby: React.FC<FlightLobbyProps> = ({ onCreateFlight, onJoinFlight }) => {
   const { availableFlights, joinFlight, isLoading, refreshFlights } = useFlightContext();
   const { user } = useAuth();
 
@@ -22,6 +23,8 @@ export const FlightLobby: React.FC<FlightLobbyProps> = ({ onCreateFlight }) => {
   const handleJoinFlight = async (flightId: string) => {
     try {
       await joinFlight(flightId);
+      // Trigger the workflow modal for the joined player
+      onJoinFlight?.();
     } catch (error) {
       console.error('Failed to join flight:', error);
     }
