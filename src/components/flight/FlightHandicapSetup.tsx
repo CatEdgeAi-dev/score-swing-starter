@@ -15,6 +15,7 @@ export const FlightHandicapSetup: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [handicaps, setHandicaps] = useState<{ [playerId: string]: string }>({});
+  const [playerProfiles, setPlayerProfiles] = useState<{ [userId: string]: { whs_index: number | null } }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -22,8 +23,8 @@ export const FlightHandicapSetup: React.FC = () => {
       console.log('🚨 IVAN DEBUG: useEffect triggered - loading handicaps');
       // Load existing handicaps from database only once when flight changes
       loadFlightHandicaps();
-      // Load user's current handicap from profile
-      loadUserHandicap();
+      // Load all player profiles to show WHS indexes
+      loadPlayerProfiles();
     }
   }, [currentFlight?.id, user?.id]); // Only depend on IDs to prevent infinite loops
 
@@ -118,30 +119,44 @@ export const FlightHandicapSetup: React.FC = () => {
     }
   };
 
-  const loadUserHandicap = async () => {
-    if (!user) return;
+  const loadPlayerProfiles = async () => {
+    if (!currentFlight) return;
 
     try {
+      // Get all registered players' user IDs
+      const registeredPlayerIds = currentFlight.players
+        .filter(p => p.userId)
+        .map(p => p.userId!)
+        .filter(Boolean);
+
+      if (registeredPlayerIds.length === 0) return;
+
       const { data, error } = await supabase
         .from('profiles')
-        .select('whs_index')
-        .eq('id', user.id)
-        .maybeSingle();
+        .select('id, whs_index')
+        .in('id', registeredPlayerIds);
 
       if (error) throw error;
 
-      if (data?.whs_index) {
-        const currentUserPlayer = currentFlight?.players.find(p => p.userId === user.id);
-        if (currentUserPlayer) {
-          // Only set if not already set to avoid overwriting user input
-          setHandicaps(prev => ({
-            ...prev,
-            [currentUserPlayer.id]: prev[currentUserPlayer.id] || data.whs_index.toString()
-          }));
+      // Map profiles to userId for easy lookup
+      const profileMap: { [userId: string]: { whs_index: number | null } } = {};
+      data?.forEach(profile => {
+        profileMap[profile.id] = { whs_index: profile.whs_index };
+      });
+
+      setPlayerProfiles(profileMap);
+
+      // Auto-fill handicaps from WHS index if not already set
+      const updatedHandicaps: { [playerId: string]: string } = { ...handicaps };
+      currentFlight.players.forEach(player => {
+        if (player.userId && profileMap[player.userId]?.whs_index && !updatedHandicaps[player.id]) {
+          updatedHandicaps[player.id] = profileMap[player.userId].whs_index!.toString();
         }
-      }
+      });
+      
+      setHandicaps(updatedHandicaps);
     } catch (error) {
-      console.error('Error loading user handicap:', error);
+      console.error('Error loading player profiles:', error);
     }
   };
 
@@ -287,6 +302,11 @@ export const FlightHandicapSetup: React.FC = () => {
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {player.isRegistered ? 'Registered Player' : 'Guest Player'}
+                          {player.userId && playerProfiles[player.userId] && (
+                            <span className="ml-2 text-xs">
+                              WHS: {playerProfiles[player.userId].whs_index ?? 'Not set'}
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
