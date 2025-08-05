@@ -66,15 +66,20 @@ export const FlightHandicapSetup: React.FC = () => {
 
       const handicapData: { [playerId: string]: string } = {};
       
-      // Map each player in currentFlight to their handicap from database
-      currentFlight.players.forEach(player => {        
-        // Find the corresponding database record by user_id
-        const dbRecord = players.find(dbPlayer => dbPlayer.user_id === player.userId);
+      // Map database records to player IDs correctly
+      // The players array comes from flight_players records, so we can match by the flight_players.id
+      players.forEach(dbPlayer => {
+        // Find the player in currentFlight that corresponds to this database record
+        const player = currentFlight.players.find(p => p.userId === dbPlayer.user_id);
         
-        if (dbRecord && dbRecord.handicap !== null) {
-          handicapData[player.id] = dbRecord.handicap.toString();
+        if (player && dbPlayer.handicap !== null) {
+          handicapData[player.id] = dbPlayer.handicap.toString();
         }
       });
+      
+      console.log('Loading handicaps from DB:', players);
+      console.log('Mapped handicap data:', handicapData);
+      console.log('Current flight players:', currentFlight.players);
       
       // Update state with database values - completely replace for consistency
       setHandicaps(handicapData);
