@@ -21,6 +21,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import Tesseract from 'tesseract.js';
 
 interface HandicapWizardProps {
   onComplete: () => void;
@@ -122,35 +123,95 @@ export const HandicapWizard: React.FC<HandicapWizardProps> = ({
   const extractHandicapFromImage = async (imageUrl: string) => {
     setIsExtracting(true);
     try {
-      // For now, we'll use a simple pattern matching approach
-      // In a real implementation, you would use OCR services like Tesseract.js or cloud APIs
+      console.log('Starting OCR extraction for:', imageUrl);
       
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Use Tesseract.js for OCR
+      const { data: { text, confidence } } = await Tesseract.recognize(
+        imageUrl,
+        'eng',
+        {
+          logger: m => console.log(m) // Optional: log progress
+        }
+      );
       
-      // Mock extraction - in real implementation, this would use OCR
-      const mockExtraction: ExtractedData = {
-        value: null,
-        confidence: 0,
-        text: "Mock OCR - please verify manually"
+      console.log('OCR completed. Extracted text:', text);
+      console.log('OCR confidence:', confidence);
+      
+      // Extract handicap index from text using multiple patterns
+      const handicapPatterns = [
+        /Handicap\s+Index[:\s]+(\d+\.?\d*)/i,
+        /WHS\s+Index[:\s]+(\d+\.?\d*)/i,
+        /Index[:\s]+(\d+\.?\d*)/i,
+        /Handicap[:\s]+(\d+\.?\d*)/i,
+        // Look for numbers that could be handicap (0.0 to 54.0)
+        /(\d{1,2}\.\d)/g
+      ];
+      
+      let extractedValue: number | null = null;
+      let extractedConfidence = confidence / 100; // Convert to 0-1 scale
+      
+      // Try each pattern
+      for (const pattern of handicapPatterns) {
+        const match = text.match(pattern);
+        if (match) {
+          const value = parseFloat(match[1]);
+          // Validate it's a reasonable handicap value
+          if (value >= 0.0 && value <= 54.0) {
+            extractedValue = value;
+            console.log(`Found handicap using pattern: ${pattern}, value: ${value}`);
+            break;
+          }
+        }
+      }
+      
+      // If no specific pattern worked, look for any decimal numbers in valid range
+      if (!extractedValue) {
+        const decimalMatches = text.match(/(\d{1,2}\.\d)/g);
+        if (decimalMatches) {
+          for (const match of decimalMatches) {
+            const value = parseFloat(match);
+            if (value >= 0.0 && value <= 54.0) {
+              extractedValue = value;
+              console.log(`Found handicap from decimal scan: ${value}`);
+              break;
+            }
+          }
+        }
+      }
+      
+      const extraction: ExtractedData = {
+        value: extractedValue,
+        confidence: extractedConfidence,
+        text: text.substring(0, 200) // Store first 200 chars for debugging
       };
       
-      setExtractedData(mockExtraction);
+      setExtractedData(extraction);
       setCurrentStep('confirm');
       
-      toast({
-        title: "Image processed",
-        description: "Please verify the extracted handicap value below.",
-      });
+      if (extractedValue) {
+        toast({
+          title: "Handicap detected!",
+          description: `Found handicap index: ${extractedValue}. Please verify it's correct.`,
+        });
+      } else {
+        toast({
+          title: "Image processed",
+          description: "Couldn't automatically detect handicap. Please enter manually.",
+        });
+      }
       
     } catch (error) {
-      console.error('Extraction error:', error);
+      console.error('OCR extraction error:', error);
+      
+      // Fallback: still proceed to confirmation step
+      setExtractedData({ value: null, confidence: 0, text: 'OCR failed' });
+      setCurrentStep('confirm');
+      
       toast({
         variant: "destructive",
-        title: "Extraction failed",
-        description: "Could not extract handicap from image. Please enter manually.",
+        title: "OCR failed",
+        description: "Could not extract text from image. Please enter handicap manually.",
       });
-      setCurrentStep('confirm');
     } finally {
       setIsExtracting(false);
     }
