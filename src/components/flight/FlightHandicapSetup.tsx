@@ -63,21 +63,7 @@ export const FlightHandicapSetup: React.FC = () => {
   const loadFlightHandicaps = async () => {
     if (!currentFlight) return;
 
-    console.log('🚨 IVAN DEBUG: loadFlightHandicaps called for flight:', currentFlight.id);
-    console.log('🚨 IVAN DEBUG: Current user:', user?.id);
-
     try {
-      // ===== DEBUG: HANDICAP LOADING START =====
-      console.group('🎲 HANDICAP LOADING DEBUG');
-      console.log('🔍 Loading handicaps for flight:', currentFlight.id);
-      console.log('👥 Current flight players in state:', currentFlight.players.map(p => ({
-        id: p.id,
-        name: p.name,
-        userId: p.userId,
-        isRegistered: p.isRegistered
-      })));
-      // ===== DEBUG: HANDICAP LOADING END =====
-
       const { data: players, error } = await supabase
         .from('flight_players')
         .select('id, user_id, guest_name, handicap, player_order')
@@ -89,86 +75,33 @@ export const FlightHandicapSetup: React.FC = () => {
         throw error;
       }
 
-      console.log('📥 Raw database response:', players);
-      console.log('📊 Database players summary:', {
-        totalRecords: players?.length || 0,
-        registeredPlayers: players?.filter(p => p.user_id).length || 0,
-        guestPlayers: players?.filter(p => p.guest_name).length || 0,
-        playersWithHandicaps: players?.filter(p => p.handicap !== null).length || 0
-      });
-      console.log('🔍 Database records detailed:', players?.map((p, i) => ({
-        index: i,
-        id: p.id,
-        user_id: p.user_id,
-        guest_name: p.guest_name,
-        handicap: p.handicap,
-        player_order: p.player_order
-      })));
-
       const handicapData: { [playerId: string]: string } = {};
       
       // Map database records to player IDs correctly
-      // The players array comes from flight_players records, so we can match by the flight_players.id
       players?.forEach((dbPlayer, index) => {
-        console.log(`🔄 Processing DB record ${index + 1}:`, {
-          dbRecord: dbPlayer,
-          hasUserId: !!dbPlayer.user_id,
-          hasGuestName: !!dbPlayer.guest_name,
-          hasHandicap: dbPlayer.handicap !== null
-        });
-
         // Find the player in currentFlight that corresponds to this database record
         const player = currentFlight.players.find(p => {
-          console.log(`🔍 Comparing DB record ${index + 1} with frontend player:`, {
-            dbUserId: dbPlayer.user_id,
-            dbGuestName: dbPlayer.guest_name,
-            frontendPlayerId: p.id,
-            frontendPlayerUserId: p.userId,
-            frontendPlayerName: p.name,
-            frontendPlayerIsRegistered: p.isRegistered
-          });
-          
           // For registered players, match by userId
           if (dbPlayer.user_id && p.userId) {
-            const matches = p.userId === dbPlayer.user_id;
-            console.log(`✅ Registered player match check: ${matches} (${p.userId} === ${dbPlayer.user_id})`);
-            return matches;
+            return p.userId === dbPlayer.user_id;
           }
           // For guest players, match by name or guest_name
           if (!dbPlayer.user_id && !p.userId) {
-            const matches = p.name === dbPlayer.guest_name || 
+            return p.name === dbPlayer.guest_name || 
                    (p.name && dbPlayer.guest_name && p.name.toLowerCase() === dbPlayer.guest_name.toLowerCase());
-            console.log(`✅ Guest player match check: ${matches} (${p.name} === ${dbPlayer.guest_name})`);
-            return matches;
           }
-          console.log(`❌ No match pattern applied for this combination`);
           return false;
-        });
-        
-        console.log(`🎯 Matching attempt for DB record ${index + 1}:`, {
-          dbPlayer: dbPlayer,
-          foundPlayer: player ? { id: player.id, name: player.name, userId: player.userId } : null,
-          matchSuccessful: !!player
         });
         
         if (player && dbPlayer.handicap !== null) {
           handicapData[player.id] = dbPlayer.handicap.toString();
-          console.log(`✅ Handicap mapped: ${player.name} -> ${dbPlayer.handicap}`);
-        } else if (dbPlayer.handicap !== null) {
-          console.warn(`⚠️ Orphaned handicap: DB record has handicap but no matching frontend player`, dbPlayer);
         }
       });
-      
-      console.log('📋 Final handicap mapping:', handicapData);
-      console.log('🎯 Players with handicaps in state:', Object.keys(handicapData).length);
-      console.groupEnd();
-      // ===== DEBUG: FINAL MAPPING END =====
       
       // Update state with database values - completely replace for consistency
       setHandicaps(handicapData);
     } catch (error) {
       console.error('❌ Error loading flight handicaps:', error);
-      console.groupEnd();
     }
   };
 
