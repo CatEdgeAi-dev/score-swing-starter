@@ -208,8 +208,14 @@ export const FlightHandicapSetup: React.FC = () => {
   }
 
   const allHandicapsSet = currentFlight.players.every(
-    player => handicaps[player.id] && handicaps[player.id].trim() !== ''
+    player => {
+      const hasHandicap = handicaps[player.id] && handicaps[player.id].trim() !== '';
+      console.log(`Button enable check - Player ${player.name} (${player.id}): handicap="${handicaps[player.id]}", hasHandicap=${hasHandicap}`);
+      return hasHandicap;
+    }
   );
+  
+  console.log('allHandicapsSet:', allHandicapsSet, 'button disabled:', !allHandicapsSet || isSubmitting);
 
   return (
     <div className="space-y-6">
