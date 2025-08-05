@@ -501,16 +501,35 @@ export const FlightProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         `)
         .eq('user_id', user.id)
         .eq('flights.date_played', new Date().toISOString().split('T')[0])
-        .single();
+        .maybeSingle();
 
-      if (!error && userFlight?.flights) {
+      if (error) {
+        console.error('Error loading user flight:', error);
+        return;
+      }
+
+      if (userFlight?.flights) {
+        // Flight exists, load it
         await loadFlightData(userFlight.flight_id);
+      } else if (userFlight && !userFlight.flights) {
+        // User has flight_players record but flight doesn't exist (orphaned record)
+        console.log('Found orphaned flight_players record, cleaning up...');
+        await supabase
+          .from('flight_players')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('flight_id', userFlight.flight_id);
+        
+        toast({
+          title: "Flight Cleaned Up",
+          description: "Removed reference to deleted flight.",
+        });
       }
     } catch (error) {
       // User not in any flight - this is normal
-      console.log('User not in any current flight');
+      console.log('User not in any current flight:', error);
     }
-  }, [user, loadFlightData]);
+  }, [user, loadFlightData, toast]);
 
 
   // Set up realtime subscriptions
