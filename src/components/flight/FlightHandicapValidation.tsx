@@ -1,118 +1,75 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, AlertCircle, Clock, Users } from 'lucide-react';
+import { CheckCircle, AlertCircle, Clock, Users, Shield } from 'lucide-react';
 import { useFlightContext } from '@/contexts/FlightContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useHandicapValidation } from '@/hooks/useHandicapValidation';
 
-interface ValidationData {
-  validatorUserId: string;
-  validatedUserId: string;
-  claimedHandicap?: number;
-  validationStatus: 'pending' | 'approved' | 'questioned';
-  validationNotes?: string;
-}
-
+/**
+ * FlightHandicapValidation Component
+ * 
+ * Handles the peer validation phase where players validate each other's
+ * claimed handicap indexes. Features:
+ * - Real-time validation status updates
+ * - Notes for questioned handicaps
+ * - Validation summary tracking
+ * - Prevents self-validation
+ */
 export const FlightHandicapValidation: React.FC = () => {
-  const { currentFlight, validationStatuses } = useFlightContext();
+  const { currentFlight } = useFlightContext();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [validations, setValidations] = useState<ValidationData[]>([]);
-  const [notes, setNotes] = useState<{ [key: string]: string }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  
+  const {
+    validations,
+    isLoading,
+    isSubmitting,
+    submitValidation,
+    getValidationStatus,
+    getPlayerValidationSummary
+  } = useHandicapValidation({
+    flightId: currentFlight?.id,
+    currentUserId: user?.id
+  });
 
-  useEffect(() => {
-    if (currentFlight && user) {
-      loadExistingValidations();
-    }
-  }, [currentFlight, user]);
-
-  const loadExistingValidations = async () => {
-    if (!currentFlight || !user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('flight_handicap_validations')
-        .select('*')
-        .eq('flight_id', currentFlight.id);
-
-      if (error) throw error;
-
-      const validationData: ValidationData[] = data.map(v => ({
-        validatorUserId: v.validator_user_id,
-        validatedUserId: v.validated_user_id,
-        claimedHandicap: v.claimed_handicap,
-        validationStatus: v.validation_status as 'pending' | 'approved' | 'questioned',
-        validationNotes: v.validation_notes
-      }));
-
-      setValidations(validationData);
-    } catch (error) {
-      console.error('Error loading validations:', error);
-    }
-  };
-
-  const submitValidation = async (validatedPlayer: any, status: 'approved' | 'questioned') => {
-    if (!currentFlight || !user) return;
-
-    setIsSubmitting(true);
-    try {
-      const validationData = {
-        flight_id: currentFlight.id,
-        validator_user_id: user.id,
-        validated_user_id: validatedPlayer.userId || validatedPlayer.id,
-        claimed_handicap: validatedPlayer.handicap,
-        validation_status: status,
-        validation_notes: notes[validatedPlayer.id] || null
-      };
-
-      const { error } = await supabase
-        .from('flight_handicap_validations')
-        .upsert(validationData, {
-          onConflict: 'flight_id,validator_user_id,validated_user_id'
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Validation submitted",
-        description: `You ${status} ${validatedPlayer.name}'s handicap.`,
-      });
-
-      await loadExistingValidations();
-    } catch (error) {
-      console.error('Error submitting validation:', error);
+  /**
+   * Handle validation submission with proper error handling
+   */
+  const handleValidationSubmit = async (
+    player: any, 
+    status: 'approved' | 'questioned'
+  ) => {
+    if (!player.handicap) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to submit validation. Please try again.",
+        title: "Cannot Validate",
+        description: "Player must set their handicap before validation.",
       });
-    } finally {
-      setIsSubmitting(false);
+      return;
     }
-  };
 
-  const getValidationStatus = (playerId: string) => {
-    if (!user) return null;
-    return validations.find(v => 
-      v.validatorUserId === user.id && 
-      v.validatedUserId === (currentFlight?.players.find(p => p.id === playerId)?.userId || playerId)
+    const success = await submitValidation(
+      player.userId || player.id,
+      parseFloat(player.handicap),
+      status,
+      notes[player.id]
     );
-  };
 
-  const getPlayerValidationSummary = (player: any) => {
-    const receivedValidations = validations.filter(v => 
-      v.validatedUserId === (player.userId || player.id)
-    );
-    const approved = receivedValidations.filter(v => v.validationStatus === 'approved').length;
-    const questioned = receivedValidations.filter(v => v.validationStatus === 'questioned').length;
-    const total = currentFlight ? currentFlight.players.length - 1 : 0; // Exclude self
-
-    return { approved, questioned, total, receivedValidations };
+    if (success) {
+      // Clear notes after successful submission
+      setNotes(prev => ({ ...prev, [player.id]: '' }));
+      
+      toast({
+        title: "Validation Submitted",
+        description: `You ${status} ${player.name}'s handicap.`,
+      });
+    }
   };
 
   if (!currentFlight || !user) {
@@ -127,8 +84,8 @@ export const FlightHandicapValidation: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Handicap Validation
+            <Shield className="h-5 w-5" />
+            Peer Handicap Validation
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -150,7 +107,10 @@ export const FlightHandicapValidation: React.FC = () => {
             <h3 className="font-semibold">Validate Other Players</h3>
             {otherPlayers.map((player) => {
               const validation = getValidationStatus(player.id);
-              const summary = getPlayerValidationSummary(player);
+              const summary = getPlayerValidationSummary(
+                player.userId || player.id, 
+                currentFlight.players.length
+              );
               
               return (
                 <Card key={player.id} className="p-4">
@@ -191,21 +151,21 @@ export const FlightHandicapValidation: React.FC = () => {
                         />
                         <div className="flex gap-2">
                           <Button
-                            onClick={() => submitValidation(player, 'approved')}
-                            disabled={isSubmitting}
+                            onClick={() => handleValidationSubmit(player, 'approved')}
+                            disabled={isSubmitting || isLoading}
                             className="flex-1"
                           >
                             <CheckCircle className="h-4 w-4 mr-2" />
-                            Looks Good
+                            Approve
                           </Button>
                           <Button
                             variant="outline"
-                            onClick={() => submitValidation(player, 'questioned')}
-                            disabled={isSubmitting}
+                            onClick={() => handleValidationSubmit(player, 'questioned')}
+                            disabled={isSubmitting || isLoading}
                             className="flex-1"
                           >
                             <AlertCircle className="h-4 w-4 mr-2" />
-                            Question This
+                            Question
                           </Button>
                         </div>
                       </div>
