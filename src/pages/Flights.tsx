@@ -98,13 +98,15 @@ const Flights = () => {
           </DialogContent>
         </Dialog>
         
-        <FlightWorkflowModal 
-          isOpen={isWorkflowModalOpen}
-          onClose={() => {
-            setIsWorkflowModalOpen(false);
-            setCurrentFlight(null); // Clear flight when modal closes
-          }}
-        />
+        {currentFlight && (
+          <FlightWorkflowModal 
+            isOpen={isWorkflowModalOpen}
+            onClose={() => {
+              setIsWorkflowModalOpen(false);
+              setCurrentFlight(null); // Clear flight when modal closes
+            }}
+          />
+        )}
       </div>
     </ProtectedRoute>
   );

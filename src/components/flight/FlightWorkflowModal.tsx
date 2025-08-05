@@ -27,7 +27,7 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
     return null;
   }
   
-  const { currentFlight, needsValidation } = flightContext;
+  const { currentFlight, needsValidation, setCurrentFlight } = flightContext;
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<'setup' | 'validation' | 'ready'>('setup');
@@ -70,6 +70,11 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
 
   const handleStartRound = () => {
     navigate('/scorecard');
+    onClose();
+  };
+
+  const handleClose = () => {
+    setCurrentFlight(null);
     onClose();
   };
 
@@ -174,7 +179,7 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
