@@ -42,19 +42,8 @@ export const FlightHandicapSetup: React.FC = () => {
         },
         (payload) => {
           console.log('Real-time handicap update received:', payload);
-          const userId = payload.new.user_id;
-          const handicap = payload.new.handicap;
-          
-          if (userId && handicap !== null) {
-            // Find the player in currentFlight by user_id
-            const player = currentFlight.players.find(p => p.id === userId);
-            if (player) {
-              setHandicaps(prev => ({
-                ...prev,
-                [player.id]: handicap.toString()
-              }));
-            }
-          }
+          // Reload all handicaps to ensure all players see the latest state
+          loadFlightHandicaps();
         }
       )
       .subscribe();
