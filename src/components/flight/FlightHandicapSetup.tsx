@@ -19,26 +19,14 @@ export const FlightHandicapSetup: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (currentFlight && user) {
-      console.log('🚨 IVAN DEBUG: useEffect triggered - loading handicaps');
-      // Load existing handicaps from database only once when flight changes
+    if (currentFlight && user && currentFlight.players && currentFlight.players.length > 0) {
+      console.log('🚨 LOADING HANDICAPS: Players are ready, loading handicaps for', currentFlight.players.length, 'players');
       loadFlightHandicaps();
-      // Load all player profiles to show WHS indexes
       loadPlayerProfiles();
+    } else if (currentFlight && user) {
+      console.log('🚨 WAITING: Flight exists but players not ready yet');
     }
-  }, [currentFlight?.id, user?.id]); // Only depend on IDs to prevent infinite loops
-
-  // Additional effect to ensure loadFlightHandicaps is called when component first renders
-  useEffect(() => {
-    if (currentFlight && user) {
-      console.log('🚨 IVAN DEBUG: Additional effect - ensuring handicaps are loaded');
-      const timer = setTimeout(() => {
-        loadFlightHandicaps();
-      }, 100); // Small delay to ensure everything is ready
-      
-      return () => clearTimeout(timer);
-    }
-  }, [currentFlight?.id, user?.id]);
+  }, [currentFlight?.id, currentFlight?.players?.length, user?.id]);
 
   // Set up real-time subscription for handicap updates
   useEffect(() => {
