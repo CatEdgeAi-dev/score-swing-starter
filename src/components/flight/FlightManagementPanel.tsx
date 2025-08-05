@@ -221,12 +221,15 @@ export const FlightManagementPanel: React.FC = () => {
                <p className="text-xs text-green-700">Ready to start your round!</p>
              </div>
              
-             <Button 
-               onClick={() => navigate('/scorecard')}
-               className="w-full gap-2"
-             >
-               Start Round
-             </Button>
+              <Button 
+                onClick={() => {
+                  sessionStorage.setItem('fromRounds', 'true');
+                  navigate('/scorecard');
+                }}
+                className="w-full gap-2"
+              >
+                Start Round
+              </Button>
              
              {isCreator ? (
                <>

@@ -43,9 +43,7 @@ const RoundSelection = () => {
     players: any[];
   }) => {
     createFlight(flightData);
-    // Set flag to indicate coming from rounds page
-    sessionStorage.setItem('fromRounds', 'true');
-    navigate('/scorecard');
+    // Stay on rounds page for handicap setup and validation workflow
   };
 
   // Calculate stats from rounds data
