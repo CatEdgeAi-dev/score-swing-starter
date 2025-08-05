@@ -160,10 +160,13 @@ export const FlightLobby: React.FC<FlightLobbyProps> = ({ onCreateFlight, onJoin
                        </AlertDialog>
                      )}
                      
-                     {isUserInFlight(flight) ? (
-                       <Button variant="outline" disabled>
-                         Already Joined
-                       </Button>
+                      {isUserInFlight(flight) ? (
+                        <Button 
+                          onClick={() => onJoinFlight?.()}
+                          variant="default"
+                        >
+                          Enter Flight
+                        </Button>
                      ) : canJoinFlight(flight) ? (
                        <Button 
                          onClick={() => handleJoinFlight(flight.id)}
