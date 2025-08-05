@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Users, Target, Play } from 'lucide-react';
 import { useFlightContextSafe } from '@/contexts/FlightContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { FlightHandicapSetup } from './FlightHandicapSetup';
 import { FlightHandicapValidation } from './FlightHandicapValidation';
 import { useNavigate } from 'react-router-dom';
@@ -34,17 +35,34 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
   useEffect(() => {
     if (!currentFlight || !user) return;
 
-    // Determine current step based on flight state
-    const allHandicapsSet = currentFlight.players.every(p => p.handicap !== undefined);
-    
-    if (!allHandicapsSet) {
-      setCurrentStep('setup');
-    } else if (needsValidation) {
-      setCurrentStep('validation');
-    } else {
-      setCurrentStep('ready');
-    }
-  }, [currentFlight, needsValidation, user]);
+    const checkFlightStatus = async () => {
+      try {
+        // Check if all players have handicaps set in the database
+        const { data: players, error } = await supabase
+          .from('flight_players')
+          .select('id, handicap')
+          .eq('flight_id', currentFlight.id);
+
+        if (error) throw error;
+
+        const allHandicapsSet = players.every(p => p.handicap !== null);
+        console.log('Flight status check - all handicaps set:', allHandicapsSet, 'needs validation:', needsValidation);
+        
+        if (!allHandicapsSet) {
+          setCurrentStep('setup');
+        } else if (needsValidation) {
+          setCurrentStep('validation');
+        } else {
+          setCurrentStep('ready');
+        }
+      } catch (error) {
+        console.error('Error checking flight status:', error);
+        setCurrentStep('setup');
+      }
+    };
+
+    checkFlightStatus();
+  }, [currentFlight?.id, needsValidation, user?.id]);
 
   const handleStartRound = () => {
     sessionStorage.setItem('fromRounds', 'true');

@@ -159,10 +159,14 @@ export const FlightHandicapSetup: React.FC = () => {
   const handleSetHandicaps = async () => {
     if (!currentFlight) return;
 
+    console.log('handleSetHandicaps called with handicaps:', handicaps);
+
     // Validate all players have handicaps set
     const missingHandicaps = currentFlight.players.filter(
       player => !handicaps[player.id] || handicaps[player.id].trim() === ''
     );
+
+    console.log('Missing handicaps check:', missingHandicaps);
 
     if (missingHandicaps.length > 0) {
       toast({
@@ -175,18 +179,7 @@ export const FlightHandicapSetup: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      // Update flight with handicap data
-      const updatedPlayers = currentFlight.players.map(player => ({
-        ...player,
-        handicap: parseFloat(handicaps[player.id])
-      }));
-
-      const updatedFlight = {
-        ...currentFlight,
-        players: updatedPlayers
-      };
-
-      setCurrentFlight(updatedFlight);
+      console.log('All handicaps are set, starting validation...');
       
       // Start the validation process
       startValidation();
