@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Users, Target, Play } from 'lucide-react';
-import { useFlightContext } from '@/contexts/FlightContext';
+import { useFlightContextSafe } from '@/contexts/FlightContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { FlightHandicapSetup } from './FlightHandicapSetup';
 import { FlightHandicapValidation } from './FlightHandicapValidation';
@@ -19,7 +19,14 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
   isOpen,
   onClose
 }) => {
-  const { currentFlight, needsValidation } = useFlightContext();
+  const flightContext = useFlightContextSafe();
+  
+  // Early return if context is not available yet
+  if (!flightContext) {
+    return null;
+  }
+  
+  const { currentFlight, needsValidation } = flightContext;
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<'setup' | 'validation' | 'ready'>('setup');

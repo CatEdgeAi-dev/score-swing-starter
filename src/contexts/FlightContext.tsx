@@ -588,3 +588,9 @@ export const useFlightContext = () => {
   }
   return context;
 };
+
+// Safe version that returns null if context is not available
+export const useFlightContextSafe = () => {
+  const context = useContext(FlightContext);
+  return context || null;
+};
