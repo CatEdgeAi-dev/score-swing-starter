@@ -71,24 +71,6 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  /* Prevent text overflow and ensure proper wrapping */
-  .break-words {
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    word-break: break-word;
-    hyphens: auto;
-  }
-  
-  .overflow-wrap-anywhere {
-    overflow-wrap: anywhere;
-  }
-  
-  /* Ensure proper mobile viewport handling */
-  body {
-    overflow-x: hidden;
-  }
-}
-
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -125,6 +107,23 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  /* Prevent text overflow and ensure proper wrapping */
+  .break-words {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+  }
+  
+  .overflow-wrap-anywhere {
+    overflow-wrap: anywhere;
+  }
+  
+  /* Ensure proper mobile viewport handling */
+  body {
+    overflow-x: hidden;
   }
 }
 
