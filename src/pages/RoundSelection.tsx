@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FlightCreation } from '@/components/flight/FlightCreation';
+import { FlightWorkflowModal } from '@/components/flight/FlightWorkflowModal';
 import { TopBar } from '@/components/navigation/TopBar';
 import { BottomTabs } from '@/components/navigation/BottomTabs';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -25,6 +26,7 @@ const RoundSelection = () => {
   const { user } = useAuth();
   const { createFlight } = useFlightContext();
   const { rounds, isLoading, refetch } = useRounds();
+  const [isWorkflowModalOpen, setIsWorkflowModalOpen] = useState(false);
 
   // Refetch rounds when the component mounts or when returning from scorecard
   useEffect(() => {
@@ -43,7 +45,7 @@ const RoundSelection = () => {
     players: any[];
   }) => {
     createFlight(flightData);
-    // Stay on rounds page for handicap setup and validation workflow
+    setIsWorkflowModalOpen(true);
   };
 
   // Calculate stats from rounds data
@@ -216,6 +218,11 @@ const RoundSelection = () => {
         </div>
         
         <BottomTabs />
+        
+        <FlightWorkflowModal 
+          isOpen={isWorkflowModalOpen}
+          onClose={() => setIsWorkflowModalOpen(false)}
+        />
       </div>
     </ProtectedRoute>
   );
