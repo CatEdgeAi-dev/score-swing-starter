@@ -23,7 +23,7 @@ interface FlightCreationProps {
     name: string;
     courseName: string;
     players: Player[];
-  }) => void;
+  }) => Promise<void>;
   currentUser: {
     id: string;
     name: string;
@@ -65,7 +65,9 @@ export const FlightCreation: React.FC<FlightCreationProps> = ({
     setPlayers(reorderedPlayers);
   };
 
-  const handleCreateFlight = () => {
+  const [isCreating, setIsCreating] = useState(false);
+
+  const handleCreateFlight = async () => {
     if (!flightName.trim()) {
       toast({
         variant: "destructive",
@@ -84,28 +86,31 @@ export const FlightCreation: React.FC<FlightCreationProps> = ({
       return;
     }
 
-    onCreateFlight({
-      name: flightName,
-      courseName: courseName,
-      players: players
-    });
+    try {
+      setIsCreating(true);
+      await onCreateFlight({
+        name: flightName,
+        courseName: courseName,
+        players: players
+      });
 
-    // Reset form
-    setFlightName('');
-    setCourseName('');
-    setPlayers([{
-      id: currentUser.id,
-      name: currentUser.name,
-      isRegistered: true,
-      userId: currentUser.id,
-      email: currentUser.email
-    }]);
-    setIsOpen(false);
-
-    toast({
-      title: "Flight Created!",
-      description: `${flightName} has been created with ${players.length} players`
-    });
+      // Reset form
+      setFlightName('');
+      setCourseName('');
+      setPlayers([{
+        id: currentUser.id,
+        name: currentUser.name,
+        isRegistered: true,
+        userId: currentUser.id,
+        email: currentUser.email
+      }]);
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Failed to create flight:', error);
+      // Error toast is handled in the context
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const currentDate = new Date().toLocaleDateString('en-US', {
@@ -236,9 +241,9 @@ export const FlightCreation: React.FC<FlightCreationProps> = ({
             <Button
               className="flex-1"
               onClick={handleCreateFlight}
-              disabled={!flightName.trim() || !courseName.trim()}
+              disabled={!flightName.trim() || !courseName.trim() || isCreating}
             >
-              Create Flight & Set Handicaps
+              {isCreating ? 'Creating Flight...' : 'Create Flight & Set Handicaps'}
             </Button>
           </div>
         </div>

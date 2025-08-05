@@ -39,13 +39,17 @@ const RoundSelection = () => {
     navigate('/scorecard');
   };
 
-  const handleCreateFlight = (flightData: {
+  const handleCreateFlight = async (flightData: {
     name: string;
     courseName: string;
     players: any[];
   }) => {
-    createFlight(flightData);
-    setIsWorkflowModalOpen(true);
+    try {
+      await createFlight(flightData);
+      setIsWorkflowModalOpen(true);
+    } catch (error) {
+      console.error('Failed to create flight:', error);
+    }
   };
 
   // Calculate stats from rounds data

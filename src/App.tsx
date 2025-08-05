@@ -24,6 +24,7 @@ import Onboarding from "./pages/Onboarding";
 import SharedRound from "./pages/SharedRound";
 import NotFound from "./pages/NotFound";
 import AdminHandicapReview from "./pages/AdminHandicapReview";
+import Flights from "./pages/Flights";
 
 const queryClient = new QueryClient();
 
