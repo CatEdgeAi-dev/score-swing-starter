@@ -19,12 +19,25 @@ export const FlightHandicapSetup: React.FC = () => {
 
   useEffect(() => {
     if (currentFlight && user) {
+      console.log('🚨 IVAN DEBUG: useEffect triggered - loading handicaps');
       // Load existing handicaps from database only once when flight changes
       loadFlightHandicaps();
       // Load user's current handicap from profile
       loadUserHandicap();
     }
   }, [currentFlight?.id, user?.id]); // Only depend on IDs to prevent infinite loops
+
+  // Additional effect to ensure loadFlightHandicaps is called when component first renders
+  useEffect(() => {
+    if (currentFlight && user) {
+      console.log('🚨 IVAN DEBUG: Additional effect - ensuring handicaps are loaded');
+      const timer = setTimeout(() => {
+        loadFlightHandicaps();
+      }, 100); // Small delay to ensure everything is ready
+      
+      return () => clearTimeout(timer);
+    }
+  }, [currentFlight?.id, user?.id]);
 
   // Set up real-time subscription for handicap updates
   useEffect(() => {
