@@ -41,7 +41,11 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
     });
 
     if (!currentFlight || !user) {
-      console.log('Missing flight or user, returning early');
+      console.log('Missing flight or user, closing modal');
+      // Automatically close modal when flight is deleted or user is removed
+      if (isOpen) {
+        onClose();
+      }
       return;
     }
 
