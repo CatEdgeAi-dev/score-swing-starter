@@ -551,10 +551,7 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             id,
             user_id,
             guest_name,
-            player_order,
-            profiles:user_id (
-              display_name
-            )
+            player_order
           )
         `)
         .eq('date_played', new Date().toISOString().split('T')[0])
