@@ -214,12 +214,12 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       console.groupEnd();
 
-      // Force reload to get database-generated UUIDs and ensure consistency
-      console.log('🔄 Reloading flight data with database UUIDs...');
-      await loadFlightData(flight.id);
+      // Load the created flight and use returned data for validation
+      console.log('🔄 Loading created flight to sync with database...');
+      const loadedFlight = await loadFlightData(flight.id);
       
-      // Verify the flight was loaded correctly
-      if (!currentFlight || currentFlight.id !== flight.id) {
+      // Verify using the returned flight data instead of state
+      if (!loadedFlight || loadedFlight.id !== flight.id) {
         throw new Error('Failed to load the created flight - data consistency issue');
       }
       
@@ -247,7 +247,7 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   /**
    * ENHANCED FLIGHT DATA LOADING with comprehensive validation
    */
-  const loadFlightData = useCallback(async (flightId: string) => {
+  const loadFlightData = useCallback(async (flightId: string): Promise<Flight | null> => {
     try {
       setIsLoading(true);
       
@@ -382,6 +382,8 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         currentPlayer: currentPlayer?.name || players[0]?.name
       });
 
+      return flight; // Return the loaded flight data
+
     } catch (error) {
       console.error('❌ Failed to load flight data:', error);
       
@@ -394,6 +396,8 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         title: "Flight Load Error",
         description: error instanceof Error ? error.message : 'Failed to load flight data',
       });
+      
+      return null; // Return null on error
     } finally {
       setIsLoading(false);
     }
