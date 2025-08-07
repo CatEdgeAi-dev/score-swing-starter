@@ -60,75 +60,7 @@ export const FlightHandicapSetup: React.FC = () => {
   const realtimeChannel = useRef<any>(null);
 
   /**
-   * Initialize handicap data when flight and players are ready
-   */
-  useEffect(() => {
-    if (currentFlight?.players?.length && user) {
-      logger.info('Initializing handicap setup', { 
-        flightId: currentFlight.id, 
-        playerCount: currentFlight.players.length 
-      });
-      
-      loadFlightHandicaps();
-      loadPlayerProfiles();
-      initializePlayerStatuses();
-    }
-  }, [currentFlight?.id, currentFlight?.players?.length, user?.id]);
-
-  /**
-   * Set up real-time subscription for handicap updates
-   */
-  useEffect(() => {
-    if (!currentFlight?.id) return;
-
-    logger.info('Setting up real-time handicap subscription', { flightId: currentFlight.id });
-
-    realtimeChannel.current = supabase
-      .channel(`flight-handicaps-${currentFlight.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'flight_players',
-          filter: `flight_id=eq.${currentFlight.id}`,
-        },
-        (payload) => {
-          logger.debug('Real-time handicap update', { 
-            event: payload.eventType, 
-            playerId: payload.new ? (payload.new as any).id : null
-          });
-          
-          // Debounced reload to prevent excessive updates
-          setTimeout(() => loadFlightHandicaps(), 50);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      if (realtimeChannel.current) {
-        logger.info('Cleaning up real-time handicap subscription');
-        supabase.removeChannel(realtimeChannel.current);
-        realtimeChannel.current = null;
-      }
-    };
-  }, [currentFlight?.id]);
-
-  /**
-   * Initialize player status tracking
-   */
-  const initializePlayerStatuses = useCallback(() => {
-    if (!currentFlight?.players) return;
-    
-    const initialStatuses: Record<string, HandicapStatus> = {};
-    currentFlight.players.forEach(player => {
-      initialStatuses[player.id] = 'editing';
-    });
-    setHandicapStatuses(initialStatuses);
-  }, [currentFlight?.players]);
-
-  /**
-   * Load current handicap data from database
+   * Load current handicap data from database with enhanced cross-player visibility
    */
   const loadFlightHandicaps = useCallback(async () => {
     if (!currentFlight?.id) {
@@ -142,13 +74,14 @@ export const FlightHandicapSetup: React.FC = () => {
     }
 
     try {
-      logger.debug('Loading flight handicaps', { 
+      logger.debug('Loading flight handicaps for ALL players', { 
         flightId: currentFlight.id, 
+        currentUser: user?.id,
         playersCount: currentFlight.players.length,
         players: currentFlight.players.map(p => ({ id: p.id, name: p.name, userId: p.userId }))
       });
 
-      const { data: players, error } = await supabase
+      const { data: dbPlayers, error } = await supabase
         .from('flight_players')
         .select('id, user_id, guest_name, handicap, handicap_locked, player_order')
         .eq('flight_id', currentFlight.id)
@@ -156,60 +89,93 @@ export const FlightHandicapSetup: React.FC = () => {
 
       if (error) throw error;
 
-      logger.debug('Raw database data:', players);
+      logger.info('Database players loaded:', { 
+        dbPlayersCount: dbPlayers?.length,
+        dbPlayers: dbPlayers?.map(p => ({
+          id: p.id,
+          userId: p.user_id,
+          guestName: p.guest_name,
+          handicap: p.handicap,
+          locked: p.handicap_locked
+        }))
+      });
 
       const handicapData: Record<string, string> = {};
       const statusData: Record<string, HandicapStatus> = {};
       
-      // Map database records to current flight players
-      players?.forEach((dbPlayer, index) => {
-        logger.debug(`Processing DB player ${index}:`, {
-          dbPlayer,
-          searchingIn: currentFlight.players.map(p => ({ id: p.id, name: p.name, userId: p.userId }))
+      // Enhanced player matching with better debugging
+      currentFlight.players.forEach((flightPlayer, index) => {
+        logger.debug(`Matching flight player ${index}:`, {
+          flightPlayer: { id: flightPlayer.id, name: flightPlayer.name, userId: flightPlayer.userId },
+          searchingInDB: dbPlayers?.map(p => ({ id: p.id, userId: p.user_id, guestName: p.guest_name }))
         });
         
-        const player = findPlayerInFlight(dbPlayer, currentFlight.players);
-        
-        logger.debug(`Player match result ${index}:`, { 
-          dbPlayerId: dbPlayer.id,
-          dbPlayerUserId: dbPlayer.user_id,
-          dbPlayerGuest: dbPlayer.guest_name,
-          dbPlayerHandicap: dbPlayer.handicap,
-          dbPlayerLocked: dbPlayer.handicap_locked,
-          matchedPlayer: player ? { id: player.id, name: player.name, userId: player.userId } : null
+        const matchedDbPlayer = dbPlayers?.find(dbPlayer => {
+          // Match by database ID first (most reliable)
+          if (flightPlayer.id === dbPlayer.id) {
+            logger.debug('Matched by database ID', { flightPlayerId: flightPlayer.id, dbPlayerId: dbPlayer.id });
+            return true;
+          }
+          
+          // Match registered players by userId
+          if (flightPlayer.userId && dbPlayer.user_id && flightPlayer.userId === dbPlayer.user_id) {
+            logger.debug('Matched by userId', { 
+              flightPlayerUserId: flightPlayer.userId, 
+              dbPlayerUserId: dbPlayer.user_id 
+            });
+            return true;
+          }
+          
+          // Match guest players by name
+          if (!flightPlayer.userId && !dbPlayer.user_id && dbPlayer.guest_name) {
+            const nameMatch = flightPlayer.name.toLowerCase() === dbPlayer.guest_name.toLowerCase();
+            logger.debug('Matching guest by name', { 
+              flightPlayerName: flightPlayer.name, 
+              dbGuestName: dbPlayer.guest_name,
+              match: nameMatch
+            });
+            return nameMatch;
+          }
+          
+          return false;
         });
         
-        if (player) {
-          logger.debug(`Setting data for player ${player.name}:`, {
-            playerId: player.id,
-            handicap: dbPlayer.handicap,
-            locked: dbPlayer.handicap_locked
+        if (matchedDbPlayer) {
+          logger.info(`✅ Matched player ${flightPlayer.name}:`, {
+            flightPlayerId: flightPlayer.id,
+            dbPlayerId: matchedDbPlayer.id,
+            handicap: matchedDbPlayer.handicap,
+            locked: matchedDbPlayer.handicap_locked
           });
           
-          if (dbPlayer.handicap !== null) {
-            handicapData[player.id] = dbPlayer.handicap.toString();
-            logger.debug(`Added handicap for ${player.name}: ${dbPlayer.handicap}`);
+          // Set handicap data for ALL players to see
+          if (matchedDbPlayer.handicap !== null) {
+            handicapData[flightPlayer.id] = matchedDbPlayer.handicap.toString();
           }
-          statusData[player.id] = dbPlayer.handicap_locked ? 'ready' : 'editing';
-          logger.debug(`Set status for ${player.name}: ${dbPlayer.handicap_locked ? 'ready' : 'editing'}`);
+          statusData[flightPlayer.id] = matchedDbPlayer.handicap_locked ? 'ready' : 'editing';
         } else {
-          logger.warn('Could not match DB player to flight player', { dbPlayer });
+          logger.warn(`❌ No match found for flight player ${flightPlayer.name}`, {
+            flightPlayer: { id: flightPlayer.id, name: flightPlayer.name, userId: flightPlayer.userId },
+            availableDbPlayers: dbPlayers?.map(p => ({ id: p.id, userId: p.user_id, guestName: p.guest_name }))
+          });
         }
       });
       
-      logger.info('Final handicap data loaded', { 
-        handicapData, 
-        statusData,
-        playersProcessed: players?.length,
-        matchedPlayers: Object.keys(handicapData).length
+      logger.info('Cross-player handicap sync completed', { 
+        loadedHandicaps: Object.keys(handicapData).length,
+        loadedStatuses: Object.keys(statusData).length,
+        totalPlayers: currentFlight.players.length,
+        handicapData,
+        statusData
       });
       
+      // Update state to show all players' data
       setHandicaps(handicapData);
       setHandicapStatuses(statusData);
     } catch (error) {
       logger.error('Failed to load flight handicaps', error);
     }
-  }, [currentFlight?.id]);
+  }, [currentFlight?.id, currentFlight?.players, user?.id]);
 
   /**
    * Load player profiles to auto-fill handicap data
@@ -259,7 +225,97 @@ export const FlightHandicapSetup: React.FC = () => {
   }, [currentFlight?.players, handicaps]);
 
   /**
-   * Helper function to find a player in the flight based on database record
+   * Initialize player status tracking
+   */
+  const initializePlayerStatuses = useCallback(() => {
+    if (!currentFlight?.players) return;
+    
+    const initialStatuses: Record<string, HandicapStatus> = {};
+    currentFlight.players.forEach(player => {
+      initialStatuses[player.id] = 'editing';
+    });
+    setHandicapStatuses(initialStatuses);
+  }, [currentFlight?.players]);
+
+  /**
+   * Initialize handicap data when flight and players are ready
+   */
+  useEffect(() => {
+    if (currentFlight?.players?.length && user) {
+      logger.info('Initializing handicap setup', { 
+        flightId: currentFlight.id, 
+        playerCount: currentFlight.players.length 
+      });
+      
+      loadFlightHandicaps();
+      loadPlayerProfiles();
+      initializePlayerStatuses();
+    }
+  }, [currentFlight?.id, currentFlight?.players?.length, user?.id, loadFlightHandicaps, loadPlayerProfiles, initializePlayerStatuses]);
+
+  /**
+   * Enhanced real-time subscription for cross-player handicap synchronization
+   */
+  useEffect(() => {
+    if (!currentFlight?.id || !user?.id) return;
+
+    logger.info('🔗 Setting up enhanced real-time handicap subscription', { 
+      flightId: currentFlight.id,
+      userId: user.id
+    });
+
+    realtimeChannel.current = supabase
+      .channel(`flight-handicaps-${currentFlight.id}-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'flight_players',
+          filter: `flight_id=eq.${currentFlight.id}`,
+        },
+        (payload) => {
+          const eventType = payload.eventType;
+          const newData = payload.new as any;
+          const oldData = payload.old as any;
+          
+          logger.info('📡 Real-time handicap update received', { 
+            event: eventType,
+            playerId: newData?.id || oldData?.id,
+            userId: newData?.user_id || oldData?.user_id,
+            guestName: newData?.guest_name || oldData?.guest_name,
+            handicap: newData?.handicap,
+            locked: newData?.handicap_locked,
+            currentUser: user.id
+          });
+          
+          // Immediate reload for all connected players to see changes
+          setTimeout(() => {
+            logger.debug('🔄 Cross-player sync: Reloading handicap data');
+            loadFlightHandicaps();
+          }, 100);
+        }
+      )
+      .subscribe((status) => {
+        logger.info('Real-time subscription status:', { 
+          status, 
+          flightId: currentFlight.id,
+          userId: user.id
+        });
+      });
+
+    return () => {
+      if (realtimeChannel.current) {
+        logger.info('🔌 Cleaning up real-time handicap subscription');
+        supabase.removeChannel(realtimeChannel.current);
+        realtimeChannel.current = null;
+      }
+    };
+  }, [currentFlight?.id, user?.id, loadFlightHandicaps]);
+
+
+  /**
+   * Enhanced player matching with comprehensive ID and name strategies
    */
   const findPlayerInFlight = useCallback((dbPlayer: any, players: any[]) => {
     if (!players || !Array.isArray(players)) {
@@ -267,55 +323,74 @@ export const FlightHandicapSetup: React.FC = () => {
       return null;
     }
 
-    const result = players.find(p => {
-      // For registered players, match by userId
-      if (dbPlayer.user_id && p.userId) {
-        const match = p.userId === dbPlayer.user_id;
-        logger.debug('Matching by userId', { 
-          dbUserId: dbPlayer.user_id, 
-          playerUserId: p.userId, 
-          match 
-        });
-        return match;
-      }
-      // For guest players, match by name
-      if (!dbPlayer.user_id && !p.userId) {
-        const exactMatch = p.name === dbPlayer.guest_name;
-        const caseInsensitiveMatch = p.name && dbPlayer.guest_name && 
-               p.name.toLowerCase() === dbPlayer.guest_name.toLowerCase();
-        const match = exactMatch || caseInsensitiveMatch;
-        logger.debug('Matching by guest name', { 
-          playerName: p.name, 
-          dbGuestName: dbPlayer.guest_name, 
-          exactMatch, 
-          caseInsensitiveMatch, 
-          match 
-        });
-        return match;
-      }
-      return false;
-    });
-
-    if (!result) {
-      logger.warn('No matching player found', { 
-        dbPlayer: { 
-          id: dbPlayer.id, 
-          user_id: dbPlayer.user_id, 
-          guest_name: dbPlayer.guest_name 
-        },
-        availablePlayers: players.map(p => ({ 
-          id: p.id, 
-          name: p.name, 
-          userId: p.userId 
-        }))
+    // Strategy 1: Direct ID match (most reliable for existing records)
+    let result = players.find(p => p.id === dbPlayer.id);
+    if (result) {
+      logger.debug('✅ Player matched by direct ID', { 
+        playerId: result.id,
+        playerName: result.name
       });
+      return result;
     }
 
-    return result;
+    // Strategy 2: Match registered players by userId
+    if (dbPlayer.user_id) {
+      result = players.find(p => p.userId === dbPlayer.user_id);
+      if (result) {
+        logger.debug('✅ Player matched by userId', { 
+          dbUserId: dbPlayer.user_id, 
+          playerUserId: result.userId,
+          playerName: result.name
+        });
+        return result;
+      }
+    }
+
+    // Strategy 3: Match guest players by name (case-insensitive)
+    if (!dbPlayer.user_id && dbPlayer.guest_name) {
+      result = players.find(p => {
+        if (p.userId) return false; // Skip registered players
+        
+        const exactMatch = p.name === dbPlayer.guest_name;
+        const caseInsensitiveMatch = p.name && 
+               p.name.toLowerCase() === dbPlayer.guest_name.toLowerCase();
+        
+        return exactMatch || caseInsensitiveMatch;
+      });
+      
+      if (result) {
+        logger.debug('✅ Guest player matched by name', { 
+          playerName: result.name, 
+          dbGuestName: dbPlayer.guest_name
+        });
+        return result;
+      }
+    }
+
+    // No match found - log detailed information for debugging
+    logger.warn('❌ No player match found', { 
+      dbPlayer: { 
+        id: dbPlayer.id, 
+        user_id: dbPlayer.user_id, 
+        guest_name: dbPlayer.guest_name 
+      },
+      searchStrategies: {
+        directId: `Looked for player.id === ${dbPlayer.id}`,
+        userId: dbPlayer.user_id ? `Looked for player.userId === ${dbPlayer.user_id}` : 'N/A (no user_id)',
+        guestName: dbPlayer.guest_name ? `Looked for guest name matching "${dbPlayer.guest_name}"` : 'N/A (no guest_name)'
+      },
+      availablePlayers: players.map(p => ({ 
+        id: p.id, 
+        name: p.name, 
+        userId: p.userId || 'guest'
+      }))
+    });
+
+    return null;
   }, []);
 
   /**
-   * Debounced save function to prevent excessive database calls
+   * Enhanced debounced save with better cross-player sync triggering
    */
   const debouncedSaveHandicap = useCallback((
     playerId: string, 
@@ -329,11 +404,14 @@ export const FlightHandicapSetup: React.FC = () => {
 
     debounceTimeouts.current[playerId] = setTimeout(async () => {
       try {
-        logger.debug('Saving handicap', { 
-          player: player.name, 
-          value: handicapValue 
+        logger.info('💾 Saving handicap with cross-player sync', { 
+          player: player.name,
+          playerId: playerId,
+          value: handicapValue,
+          userId: player.userId
         });
         
+        // Find the correct database record to update
         const updateQuery = player.userId 
           ? supabase
               .from('flight_players')
@@ -343,25 +421,41 @@ export const FlightHandicapSetup: React.FC = () => {
           : supabase
               .from('flight_players')
               .update({ handicap: handicapValue })
-              .eq('id', playerId);
+              .eq('flight_id', currentFlight!.id)
+              .eq('guest_name', player.name);
 
-        const { error } = await updateQuery;
-        if (error) throw error;
+        const { data, error } = await updateQuery.select();
         
-        logger.info('Handicap saved successfully', { player: player.name });
+        if (error) {
+          logger.error('Database update failed', error);
+          throw error;
+        }
+        
+        logger.info('✅ Handicap saved and real-time sync triggered', { 
+          player: player.name,
+          updatedRecords: data?.length || 0,
+          handicapValue
+        });
+        
+        // Force immediate reload for cross-player visibility
+        setTimeout(() => {
+          logger.debug('🔄 Triggering cross-player data refresh');
+          loadFlightHandicaps();
+        }, 100);
+        
       } catch (error) {
-        logger.error('Failed to save handicap', error);
+        logger.error('❌ Failed to save handicap', error);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Failed to save handicap. Please try again.",
+          title: "Sync Error",
+          description: `Failed to save ${player.name}'s handicap. Please try again.`,
         });
       }
       
       // Clean up timeout reference
       delete debounceTimeouts.current[playerId];
-    }, 500);
-  }, [currentFlight, toast]);
+    }, 300); // Reduced debounce time for faster sync
+  }, [currentFlight, toast, loadFlightHandicaps]);
 
   /**
    * Handle handicap input changes with validation and debounced saving
@@ -398,34 +492,51 @@ export const FlightHandicapSetup: React.FC = () => {
     try {
       setHandicapStatuses(prev => ({ ...prev, [playerId]: 'syncing' }));
       
-      // Save the "ready" status to the database so all players can see it
+      logger.info('🔒 Locking in handicap for cross-player visibility', {
+        player: player.name,
+        playerId,
+        handicap: handicaps[playerId],
+        userId: player.userId
+      });
+      
+      // Enhanced update query with better targeting
       const updateQuery = player.userId 
         ? supabase
             .from('flight_players')
-            .update({ handicap_locked: true } as any)
+            .update({ handicap_locked: true })
             .eq('flight_id', currentFlight.id)
             .eq('user_id', player.userId)
         : supabase
             .from('flight_players')
-            .update({ handicap_locked: true } as any)
-            .eq('id', playerId);
+            .update({ handicap_locked: true })
+            .eq('flight_id', currentFlight.id)
+            .eq('guest_name', player.name);
 
-      const { error } = await updateQuery;
+      const { data, error } = await updateQuery.select();
 
       if (error) throw error;
+      
+      logger.info('✅ Handicap locked successfully', {
+        player: player.name,
+        updatedRecords: data?.length || 0
+      });
       
       setHandicapStatuses(prev => ({ ...prev, [playerId]: 'ready' }));
       
       toast({
         title: "Handicap Locked In",
-        description: `${player.name}'s handicap is confirmed and ready for validation.`,
+        description: `${player.name}'s handicap is confirmed and visible to all players.`,
       });
+      
+      // Force reload to ensure all players see the update
+      setTimeout(() => loadFlightHandicaps(), 100);
+      
     } catch (error) {
-      console.error('Error locking handicap:', error);
+      logger.error('❌ Error locking handicap', error);
       setHandicapStatuses(prev => ({ ...prev, [playerId]: 'editing' }));
       toast({
         variant: "destructive",
-        title: "Error",
+        title: "Lock Failed",
         description: "Failed to lock handicap. Please try again.",
       });
     }
@@ -438,26 +549,47 @@ export const FlightHandicapSetup: React.FC = () => {
     try {
       setHandicapStatuses(prev => ({ ...prev, [playerId]: 'syncing' }));
       
-      // Remove the "ready" status from the database
+      logger.info('🔓 Unlocking handicap for editing', {
+        player: player.name,
+        playerId,
+        userId: player.userId
+      });
+      
+      // Enhanced unlock with better targeting
       const updateQuery = player.userId 
         ? supabase
             .from('flight_players')
-            .update({ handicap_locked: false } as any)
+            .update({ handicap_locked: false })
             .eq('flight_id', currentFlight.id)
             .eq('user_id', player.userId)
         : supabase
             .from('flight_players')
-            .update({ handicap_locked: false } as any)
-            .eq('id', playerId);
+            .update({ handicap_locked: false })
+            .eq('flight_id', currentFlight.id)
+            .eq('guest_name', player.name);
 
-      const { error } = await updateQuery;
+      const { data, error } = await updateQuery.select();
 
       if (error) throw error;
       
+      logger.info('✅ Handicap unlocked successfully', {
+        player: player.name,
+        updatedRecords: data?.length || 0
+      });
+      
       setHandicapStatuses(prev => ({ ...prev, [playerId]: 'editing' }));
+      
+      // Force reload to sync across all players
+      setTimeout(() => loadFlightHandicaps(), 100);
+      
     } catch (error) {
-      console.error('Error unlocking handicap:', error);
+      logger.error('❌ Error unlocking handicap', error);
       setHandicapStatuses(prev => ({ ...prev, [playerId]: 'ready' }));
+      toast({
+        variant: "destructive",
+        title: "Unlock Failed", 
+        description: "Failed to unlock handicap. Please try again.",
+      });
     }
   };
 
