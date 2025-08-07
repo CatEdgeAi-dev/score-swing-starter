@@ -571,7 +571,7 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .sort((a, b) => a.player_order - b.player_order)
           .map(fp => ({
             id: fp.id,
-            name: fp.user_id ? ((fp.profiles as any)?.display_name || 'Unknown User') : (fp.guest_name || 'Unknown Guest'),
+            name: fp.user_id ? 'Unknown User' : (fp.guest_name || 'Unknown Guest'),
             isRegistered: !!fp.user_id,
             userId: fp.user_id || undefined
           }))
