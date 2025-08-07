@@ -273,12 +273,7 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             player_order,
             handicap,
             handicap_locked,
-            created_at,
-            profiles:user_id (
-              id,
-              display_name,
-              whs_index
-            )
+            created_at
           )
         `)
         .eq('id', flightId)
@@ -312,19 +307,25 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // Transform flight players data with enhanced validation
-      const players: Player[] = flightData.flight_players
+      const playerPromises = flightData.flight_players
         .sort((a, b) => a.player_order - b.player_order)
-        .map((fp: any) => {
+        .map(async (fp: any) => {
           // Validate database record
           if (!fp.id) {
             throw new Error('Player record missing database ID');
           }
 
-          if (fp.user_id && fp.profiles) {
-            // Registered player
+          if (fp.user_id) {
+            // Get profile for registered player
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('display_name')
+              .eq('id', fp.user_id)
+              .single();
+
             return {
               id: fp.id, // Use database-generated UUID
-              name: fp.profiles.display_name || 'Unknown User',
+              name: profile?.display_name || 'Unknown User',
               isRegistered: true,
               userId: fp.user_id,
               handicap: fp.handicap ? Number(fp.handicap) : undefined
@@ -345,6 +346,8 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             })}`);
           }
         });
+
+      const players: Player[] = await Promise.all(playerPromises);
 
       console.log('✅ Transformed players with database UUIDs:', players.map(p => ({
         dbId: p.id, // Now using real database UUID
