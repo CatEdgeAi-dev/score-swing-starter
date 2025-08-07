@@ -208,21 +208,26 @@ export const FlightHandicapSetup: React.FC = () => {
 
       setPlayerProfiles(profileMap);
 
-      // Auto-fill handicaps from WHS index if not already set
-      const updatedHandicaps = { ...handicaps };
-      currentFlight.players.forEach(player => {
-        if (player.userId && 
-            profileMap[player.userId]?.whsIndex !== null && 
-            !updatedHandicaps[player.id]) {
-          updatedHandicaps[player.id] = profileMap[player.userId].whsIndex!.toString();
-        }
+      // Only auto-fill if handicaps state is empty to prevent infinite loops
+      setHandicaps(prev => {
+        const updatedHandicaps = { ...prev };
+        let hasChanges = false;
+        
+        currentFlight.players.forEach(player => {
+          if (player.userId && 
+              profileMap[player.userId]?.whsIndex !== null && 
+              !updatedHandicaps[player.id]) {
+            updatedHandicaps[player.id] = profileMap[player.userId].whsIndex!.toString();
+            hasChanges = true;
+          }
+        });
+        
+        return hasChanges ? updatedHandicaps : prev;
       });
-      
-      setHandicaps(updatedHandicaps);
     } catch (error) {
       logger.error('Failed to load player profiles', error);
     }
-  }, [currentFlight?.players, handicaps]);
+  }, [currentFlight?.players]);
 
   /**
    * Initialize player status tracking
