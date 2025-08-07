@@ -319,83 +319,10 @@ export const FlightHandicapSetup: React.FC = () => {
   }, [currentFlight?.id, user?.id, loadFlightHandicaps]);
 
 
-  /**
-   * Enhanced player matching with comprehensive ID and name strategies
-   */
-  const findPlayerInFlight = useCallback((dbPlayer: any, players: any[]) => {
-    if (!players || !Array.isArray(players)) {
-      logger.warn('Invalid players array provided to findPlayerInFlight', { players });
-      return null;
-    }
-
-    // Strategy 1: Direct ID match (most reliable for existing records)
-    let result = players.find(p => p.id === dbPlayer.id);
-    if (result) {
-      logger.debug('✅ Player matched by direct ID', { 
-        playerId: result.id,
-        playerName: result.name
-      });
-      return result;
-    }
-
-    // Strategy 2: Match registered players by userId
-    if (dbPlayer.user_id) {
-      result = players.find(p => p.userId === dbPlayer.user_id);
-      if (result) {
-        logger.debug('✅ Player matched by userId', { 
-          dbUserId: dbPlayer.user_id, 
-          playerUserId: result.userId,
-          playerName: result.name
-        });
-        return result;
-      }
-    }
-
-    // Strategy 3: Match guest players by name (case-insensitive)
-    if (!dbPlayer.user_id && dbPlayer.guest_name) {
-      result = players.find(p => {
-        if (p.userId) return false; // Skip registered players
-        
-        const exactMatch = p.name === dbPlayer.guest_name;
-        const caseInsensitiveMatch = p.name && 
-               p.name.toLowerCase() === dbPlayer.guest_name.toLowerCase();
-        
-        return exactMatch || caseInsensitiveMatch;
-      });
-      
-      if (result) {
-        logger.debug('✅ Guest player matched by name', { 
-          playerName: result.name, 
-          dbGuestName: dbPlayer.guest_name
-        });
-        return result;
-      }
-    }
-
-    // No match found - log detailed information for debugging
-    logger.warn('❌ No player match found', { 
-      dbPlayer: { 
-        id: dbPlayer.id, 
-        user_id: dbPlayer.user_id, 
-        guest_name: dbPlayer.guest_name 
-      },
-      searchStrategies: {
-        directId: `Looked for player.id === ${dbPlayer.id}`,
-        userId: dbPlayer.user_id ? `Looked for player.userId === ${dbPlayer.user_id}` : 'N/A (no user_id)',
-        guestName: dbPlayer.guest_name ? `Looked for guest name matching "${dbPlayer.guest_name}"` : 'N/A (no guest_name)'
-      },
-      availablePlayers: players.map(p => ({ 
-        id: p.id, 
-        name: p.name, 
-        userId: p.userId || 'guest'
-      }))
-    });
-
-    return null;
-  }, []);
+  // Remove the complex findPlayerInFlight function - no longer needed with simplified approach
 
   /**
-   * Enhanced debounced save with better cross-player sync triggering
+   * Simplified debounced save using player database IDs directly
    */
   const debouncedSaveHandicap = useCallback((
     playerId: string, 
@@ -409,44 +336,36 @@ export const FlightHandicapSetup: React.FC = () => {
 
     debounceTimeouts.current[playerId] = setTimeout(async () => {
       try {
-        logger.info('💾 Saving handicap with cross-player sync', { 
+        logger.info('💾 Saving handicap using direct ID', { 
           player: player.name,
-          playerId: playerId,
-          value: handicapValue,
-          userId: player.userId
+          playerId: playerId, // This is now the database UUID
+          value: handicapValue
         });
         
-        // Find the correct database record to update
-        const updateQuery = player.userId 
-          ? supabase
-              .from('flight_players')
-              .update({ handicap: handicapValue })
-              .eq('flight_id', currentFlight!.id)
-              .eq('user_id', player.userId)
-          : supabase
-              .from('flight_players')
-              .update({ handicap: handicapValue })
-              .eq('flight_id', currentFlight!.id)
-              .eq('guest_name', player.name);
-
-        const { data, error } = await updateQuery.select();
+        // Update using the player's database ID directly
+        const { data, error } = await supabase
+          .from('flight_players')
+          .update({ handicap: handicapValue })
+          .eq('id', playerId) // Use database UUID directly
+          .select();
         
         if (error) {
           logger.error('Database update failed', error);
           throw error;
         }
         
-        logger.info('✅ Handicap saved and real-time sync triggered', { 
+        if (!data || data.length === 0) {
+          throw new Error('No records updated - player ID may be invalid');
+        }
+        
+        logger.info('✅ Handicap saved successfully', { 
           player: player.name,
-          updatedRecords: data?.length || 0,
-          handicapValue
+          playerId: playerId,
+          handicapValue,
+          updatedRecords: data.length
         });
         
-        // Force immediate reload for cross-player visibility
-        setTimeout(() => {
-          logger.debug('🔄 Triggering cross-player data refresh');
-          loadFlightHandicaps();
-        }, 100);
+        // The real-time subscription will handle cross-player sync automatically
         
       } catch (error) {
         logger.error('❌ Failed to save handicap', error);
@@ -459,8 +378,8 @@ export const FlightHandicapSetup: React.FC = () => {
       
       // Clean up timeout reference
       delete debounceTimeouts.current[playerId];
-    }, 300); // Reduced debounce time for faster sync
-  }, [currentFlight, toast, loadFlightHandicaps]);
+    }, 300);
+  }, [toast]);
 
   /**
    * Handle handicap input changes with validation and debounced saving
