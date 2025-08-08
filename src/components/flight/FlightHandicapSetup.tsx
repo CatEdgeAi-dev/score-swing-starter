@@ -596,6 +596,41 @@ export const FlightHandicapSetup: React.FC = () => {
             Each player needs to set their current WHS handicap index before the round can begin.
           </p>
 
+          {/* Self handicap fallback: always show an input for the current user when not set */}
+          {(() => {
+            const myPlayer = currentFlight.players.find(p => p.userId === user?.id);
+            if (!myPlayer) return null;
+            const myHandicapValue = handicaps[myPlayer.id] || '';
+            const myStatus = handicapStatuses[myPlayer.id] || 'editing';
+            const showSelfInputFallback = myHandicapValue.trim() === '' && myStatus !== 'syncing';
+            if (!showSelfInputFallback) return null;
+            return (
+              <div className="p-4 border rounded-lg bg-background/50">
+                <Label htmlFor={`self-handicap-${myPlayer.id}`} className="text-sm mb-2 inline-block">
+                  Set your handicap for this flight
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id={`self-handicap-${myPlayer.id}`}
+                    type="text"
+                    placeholder="0.0"
+                    value={myHandicapValue}
+                    onChange={(e) => handleHandicapChange(myPlayer.id, e.target.value)}
+                    className="w-24 text-center"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => handleLockInHandicap(myPlayer.id)}
+                    disabled={!myHandicapValue.trim()}
+                  >
+                    <Lock className="h-3 w-3 mr-1" />
+                    Lock In
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="space-y-4">
             {currentFlight.players.map((player) => {
               const isCurrentUser = player.userId === user?.id;
