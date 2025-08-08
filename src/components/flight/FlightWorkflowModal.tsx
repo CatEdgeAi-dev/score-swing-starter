@@ -43,14 +43,15 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
       try {
         const { data: players, error } = await supabase
           .from('flight_players')
-          .select('id, handicap')
+          .select('id, handicap, handicap_locked')
           .eq('flight_id', currentFlight.id);
 
         if (error) throw error;
 
-        const allHandicapsSet = players.every(p => p.handicap !== null);
+        const allHandicapsSet = players.every(p => p.handicap !== null && p.handicap !== undefined);
+        const allLocked = players.every(p => p.handicap_locked === true);
         
-        if (!allHandicapsSet) {
+        if (!allHandicapsSet || !allLocked) {
           setCurrentStep('setup');
         } else if (needsValidation) {
           setCurrentStep('validation');

@@ -3,12 +3,14 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, AlertCircle, Clock, Users, Shield } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { CheckCircle, AlertCircle, Clock, Users, Shield, Lock } from 'lucide-react';
 import { useFlightContext } from '@/contexts/FlightContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useHandicapValidation } from '@/hooks/useHandicapValidation';
-
+import { supabase } from '@/integrations/supabase/client';
 /**
  * FlightHandicapValidation Component
  * 
@@ -25,6 +27,8 @@ export const FlightHandicapValidation: React.FC = () => {
   const { toast } = useToast();
   
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [selfHandicap, setSelfHandicap] = useState<string>('');
+  const [isSavingSelf, setIsSavingSelf] = useState(false);
   
   const {
     validations,
@@ -45,7 +49,7 @@ export const FlightHandicapValidation: React.FC = () => {
     player: any, 
     status: 'approved' | 'questioned'
   ) => {
-    if (!player.handicap) {
+    if (player.handicap === null || player.handicap === undefined || Number.isNaN(Number(player.handicap))) {
       toast({
         variant: "destructive",
         title: "Cannot Validate",
@@ -69,6 +73,45 @@ export const FlightHandicapValidation: React.FC = () => {
         title: "Validation Submitted",
         description: `You ${status} ${player.name}'s handicap.`,
       });
+    }
+  };
+
+  const handleSelfHandicapSave = async () => {
+    if (!currentFlight || !user) return;
+    const me = currentFlight.players.find(p => p.userId === user.id);
+    if (!me) return;
+
+    const value = parseFloat(selfHandicap);
+    if (Number.isNaN(value)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid handicap",
+        description: "Please enter a valid number (e.g., 0.0, 12.3).",
+      });
+      return;
+    }
+
+    try {
+      setIsSavingSelf(true);
+      const { error } = await supabase
+        .from('flight_players')
+        .update({ handicap: value, handicap_locked: true })
+        .eq('id', me.id);
+      if (error) throw error;
+
+      toast({
+        title: "Handicap saved",
+        description: "Your handicap was set and locked for this flight.",
+      });
+      setSelfHandicap('');
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Save failed",
+        description: "Could not save your handicap. Please try again.",
+      });
+    } finally {
+      setIsSavingSelf(false);
     }
   };
 
@@ -103,7 +146,34 @@ export const FlightHandicapValidation: React.FC = () => {
             </div>
           )}
 
-          <div className="space-y-4">
+          {currentUserPlayer && currentUserPlayer.handicap == null && (
+            <div className="p-4 border rounded-lg bg-background/50">
+              <Label htmlFor="self-handicap" className="text-sm mb-2 inline-block">
+                Set your handicap for this flight
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="self-handicap"
+                  type="text"
+                  placeholder="0.0"
+                  inputMode="decimal"
+                  value={selfHandicap}
+                  onChange={(e) => setSelfHandicap(e.target.value)}
+                  className="w-24 text-center"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleSelfHandicapSave}
+                  disabled={isSavingSelf || selfHandicap.trim() === '' || Number.isNaN(parseFloat(selfHandicap))}
+                >
+                  <Lock className="h-3 w-3 mr-1" />
+                  Save & Lock
+                </Button>
+              </div>
+            </div>
+          )}
+
+           <div className="space-y-4">
             <h3 className="font-semibold">Validate Other Players</h3>
             {otherPlayers.map((player) => {
               const targetId = player.userId || player.id;
@@ -142,7 +212,7 @@ export const FlightHandicapValidation: React.FC = () => {
                       </div>
                     </div>
 
-                    {!validation && player.handicap !== undefined && (
+                    {!validation && player.handicap != null && (
                       <div className="space-y-3">
                         <Textarea
                           placeholder="Add notes about this handicap (optional)"
@@ -179,7 +249,7 @@ export const FlightHandicapValidation: React.FC = () => {
                       </div>
                     )}
 
-                    {player.handicap === undefined && (
+                    {player.handicap == null && (
                       <div className="text-center py-4">
                         <Clock className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                         <p className="text-sm text-muted-foreground">
