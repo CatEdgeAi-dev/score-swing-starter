@@ -19,7 +19,7 @@ import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { FlightHandicapSetup } from './FlightHandicapSetup';
-import { FlightHandicapValidation } from './FlightHandicapValidation';
+
 import { useAsyncOperation } from '@/hooks/useAsyncOperation';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,7 +27,7 @@ export const FlightManagementPanel: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { currentFlight, currentPlayer, leaveFlight, isFlightMode, needsValidation, validationStatuses } = useFlightContext();
+  const { currentFlight, currentPlayer, leaveFlight, isFlightMode } = useFlightContext();
   
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -43,9 +43,6 @@ export const FlightManagementPanel: React.FC = () => {
   const allHandicapsSet = currentFlight.players.every(player => player.handicap !== undefined);
   
   // Check validation progress
-  const allValidationsComplete = validationStatuses.length > 0 && 
-    validationStatuses.every(status => status.status === 'validated');
-  
   // Delete flight operation
   const deleteFlightOperation = useAsyncOperation(
     async () => {
@@ -115,44 +112,6 @@ export const FlightManagementPanel: React.FC = () => {
     );
   }
 
-  // Show validation if handicaps are set but validation isn't complete
-  if (needsValidation && !allValidationsComplete) {
-    return (
-      <>
-        <FlightHandicapValidation />
-        <Card className="w-full">
-          <CardContent className="pt-6">
-            <div className="space-y-3">
-              <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  Complete peer validation to start your round
-                </p>
-              </div>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowLeaveDialog(true)}
-                className="w-full"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Leave Flight
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <ConfirmationDialog
-          open={showLeaveDialog}
-          onOpenChange={setShowLeaveDialog}
-          title="Leave Flight?"
-          description={`Are you sure you want to leave ${currentFlight.name}? You'll lose access to the flight scorecard.`}
-          confirmLabel="Leave Flight"
-          cancelLabel="Stay"
-          variant="destructive"
-          onConfirm={handleLeaveFlight}
-        />
-      </>
-    );
-  }
 
   return (
     <>
@@ -235,7 +194,7 @@ export const FlightManagementPanel: React.FC = () => {
            {/* Flight Actions */}
            <div className="space-y-2">
              <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
-               <p className="text-sm text-green-800 font-medium">✓ Validation Complete</p>
+               <p className="text-sm text-green-800 font-medium">✓ Setup Complete</p>
                <p className="text-xs text-green-700">Ready to start your round!</p>
              </div>
              

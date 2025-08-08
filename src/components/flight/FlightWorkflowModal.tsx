@@ -8,7 +8,7 @@ import { useFlightContextSafe } from '@/contexts/FlightContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { FlightHandicapSetup } from './FlightHandicapSetup';
-import { FlightHandicapValidation } from './FlightHandicapValidation';
+
 import { useNavigate } from 'react-router-dom';
 
 interface FlightWorkflowModalProps {
@@ -27,10 +27,10 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
     return null;
   }
   
-  const { currentFlight, needsValidation, setCurrentFlight } = flightContext;
+  const { currentFlight, setCurrentFlight } = flightContext;
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState<'setup' | 'validation' | 'ready'>('setup');
+  const [currentStep, setCurrentStep] = useState<'setup' | 'ready'>('setup');
   const [hasCheckedStatus, setHasCheckedStatus] = useState(false);
 
   // Check flight status only once when modal opens
@@ -53,8 +53,6 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
         
         if (!allHandicapsSet || !allLocked) {
           setCurrentStep('setup');
-        } else if (needsValidation) {
-          setCurrentStep('validation');
         } else {
           setCurrentStep('ready');
         }
@@ -68,7 +66,7 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
     };
 
     checkFlightStatus();
-  }, [isOpen, currentFlight?.id, user?.id, needsValidation, hasCheckedStatus]);
+  }, [isOpen, currentFlight?.id, user?.id, hasCheckedStatus]);
 
   // Reset check status when modal closes
   useEffect(() => {
@@ -78,13 +76,6 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
     }
   }, [isOpen]);
 
-  // React to validation being started while modal is open
-  useEffect(() => {
-    if (!isOpen || !currentFlight) return;
-    if (needsValidation && currentStep !== 'validation') {
-      setCurrentStep('validation');
-    }
-  }, [needsValidation, isOpen, currentFlight?.id, currentStep]);
   const handleStartRound = () => {
     navigate('/scorecard');
     onClose();
@@ -99,7 +90,6 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
   const getStepIndicator = () => {
     const steps = [
       { key: 'setup', label: 'Handicap Setup', icon: Target },
-      { key: 'validation', label: 'Peer Validation', icon: Users },
       { key: 'ready', label: 'Ready to Play', icon: Play }
     ];
 
@@ -108,8 +98,7 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
         {steps.map((step, index) => {
           const isActive = currentStep === step.key;
           const isCompleted = 
-            (step.key === 'setup' && currentStep !== 'setup') ||
-            (step.key === 'validation' && currentStep === 'ready');
+            (step.key === 'setup' && currentStep === 'ready');
           
           const StepIcon = step.icon;
           
@@ -151,9 +140,6 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
       case 'setup':
         return <FlightHandicapSetup />;
       
-      case 'validation':
-        return <FlightHandicapValidation />;
-      
       case 'ready':
         return (
           <Card>
@@ -166,7 +152,7 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
               <div>
                 <h3 className="text-lg font-semibold">Ready to Start!</h3>
                 <p className="text-muted-foreground">
-                  All handicaps have been validated. Your flight is ready to begin the round.
+                  All handicaps are locked. Your flight is ready to begin the round.
                 </p>
               </div>
               <div className="space-y-2">
