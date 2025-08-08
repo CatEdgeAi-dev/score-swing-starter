@@ -679,8 +679,10 @@ export const FlightHandicapSetup: React.FC = () => {
           <div className="space-y-4">
             {currentFlight.players.map((player) => {
               const isCurrentUser = player.userId === user?.id;
-              const handicapValue = handicaps[player.id] || '';
-              const hasHandicap = handicapValue.trim() !== '';
+              const savedValue = handicaps[player.id] || '';
+              const draftValue = draftHandicaps[player.id] ?? '';
+              const displayValue = isCurrentUser && draftValue !== '' ? draftValue : savedValue;
+              const hasValueForLock = (isCurrentUser ? (draftValue || savedValue) : savedValue).trim() !== '';
               const status = handicapStatuses[player.id] || 'editing';
               const isReady = status === 'ready';
               const isSyncing = status === 'syncing';
@@ -703,7 +705,7 @@ export const FlightHandicapSetup: React.FC = () => {
                   case 'syncing':
                     return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Syncing...</Badge>;
                   default:
-                    return hasHandicap ? 
+                    return hasValueForLock ? 
                       <Badge variant="outline" className="text-orange-600 border-orange-200">Editing</Badge> :
                       <Badge variant="outline" className="text-gray-500">Not Set</Badge>;
                 }
@@ -748,13 +750,13 @@ export const FlightHandicapSetup: React.FC = () => {
                             id={`handicap-${player.id}`}
                             type="text"
                             placeholder="0.0"
-                            value={handicapValue}
+                            value={displayValue}
                             readOnly
                             disabled
                             aria-label="WHS index (display only)"
                             className="w-20 text-center"
                           />
-                          {isCurrentUser && hasHandicap && !isReady && !isSyncing && (
+                          {isCurrentUser && hasValueForLock && !isReady && !isSyncing && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -781,7 +783,7 @@ export const FlightHandicapSetup: React.FC = () => {
                     </div>
                   </div>
 
-                  {isCurrentUser && !hasHandicap && !isReady && (
+                  {isCurrentUser && !hasValueForLock && !isReady && (
                     <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <p className="text-sm text-orange-800">
                         Please enter your current WHS handicap index. If you don't have one, enter 0.0.
@@ -789,7 +791,7 @@ export const FlightHandicapSetup: React.FC = () => {
                     </div>
                   )}
 
-                  {isCurrentUser && hasHandicap && !isReady && !isSyncing && (
+                  {isCurrentUser && hasValueForLock && !isReady && !isSyncing && (
                     <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm text-blue-800">
                         Click "Lock In" when you're satisfied with your handicap. Once locked, all players can see it's confirmed.
