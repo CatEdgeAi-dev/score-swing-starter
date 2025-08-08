@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/utils/logger';
+import { useNavigate } from 'react-router-dom';
 
 /** Status of a player's handicap input */
 type HandicapStatus = 'editing' | 'ready' | 'syncing';
@@ -45,10 +46,11 @@ interface PlayerProfile {
  * - Input validation for WHS handicap ranges (0-54.0)
  */
 export const FlightHandicapSetup: React.FC = () => {
-  const { currentFlight, startValidation, leaveFlight } = useFlightContext();
+  const { currentFlight, leaveFlight } = useFlightContext();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+  const navigate = useNavigate();
+
   // State management
   const [handicaps, setHandicaps] = useState<Record<string, string>>({});
   const [handicapStatuses, setHandicapStatuses] = useState<Record<string, HandicapStatus>>({});
@@ -592,44 +594,29 @@ export const FlightHandicapSetup: React.FC = () => {
   const handleSetHandicaps = async () => {
     if (!currentFlight) return;
 
-    console.log('handleSetHandicaps called with handicaps:', handicaps);
-
-    // Validate all players have handicaps set
-    const missingHandicaps = currentFlight.players.filter(
-      player => !handicaps[player.id] || handicaps[player.id].trim() === ''
+    // Ensure all players have locked their handicaps before starting
+    const ready = currentFlight.players.every(
+      (player) => handicapStatuses[player.id] === 'ready'
     );
 
-    console.log('Missing handicaps check:', missingHandicaps);
-
-    if (missingHandicaps.length > 0) {
+    if (!ready) {
       toast({
-        variant: "destructive",
-        title: "Missing Handicaps",
-        description: `Please set handicaps for: ${missingHandicaps.map(p => p.name).join(', ')}`,
+        variant: 'destructive',
+        title: 'Players not ready',
+        description: 'All players must lock in their handicaps before starting.',
       });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      console.log('All handicaps are set, starting validation...');
-      
-      // Start the validation process
-      console.log('Calling startValidation()...');
-      startValidation();
-      console.log('startValidation() called successfully');
-
-      toast({
-        title: "Handicaps Set!",
-        description: "Now validate each other's handicaps before starting the round.",
-      });
-
+      navigate('/scorecard');
     } catch (error) {
-      console.error('Error setting handicaps:', error);
+      console.error('Error starting round:', error);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to set handicaps. Please try again.",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to start the round. Please try again.',
       });
     } finally {
       setIsSubmitting(false);
@@ -867,7 +854,7 @@ export const FlightHandicapSetup: React.FC = () => {
               <div>
                 <span className="text-muted-foreground">Next step:</span>
                 <span className="ml-2 font-medium">
-                  {allPlayersReady ? 'Peer validation' : 'Lock in handicaps'}
+                  {allPlayersReady ? 'Start round' : 'Lock in handicaps'}
                 </span>
               </div>
             </div>
@@ -876,26 +863,19 @@ export const FlightHandicapSetup: React.FC = () => {
           {!allPlayersReady && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
-                <strong>Ready to proceed?</strong> Each player must lock in their handicap before validation can begin. 
-                This ensures everyone sees the final, confirmed handicaps for peer review.
+                <strong>Ready to proceed?</strong> Each player must lock in their handicap before the round can begin.
+                This ensures everyone sees the final, confirmed handicaps.
               </p>
             </div>
           )}
 
-          {currentFlight.createdBy === user?.id && !whsRefreshed && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <p className="text-sm text-amber-800">
-                Please refresh WHS indexes before proceeding. Use the "Refresh WHS" button above.
-              </p>
-            </div>
-          )}
 
           <Button
             onClick={handleSetHandicaps}
-            disabled={!allPlayersReady || isSubmitting || (currentFlight.createdBy === user?.id && !whsRefreshed)}
+            disabled={!allPlayersReady || isSubmitting}
             className="w-full"
           >
-            {isSubmitting ? 'Setting up...' : 'Continue to Validation'}
+            {isSubmitting ? 'Starting...' : 'Start Round'}
           </Button>
           
           <Button
