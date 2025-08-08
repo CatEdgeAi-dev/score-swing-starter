@@ -54,6 +54,8 @@ export const FlightHandicapSetup: React.FC = () => {
   const [handicapStatuses, setHandicapStatuses] = useState<Record<string, HandicapStatus>>({});
   const [playerProfiles, setPlayerProfiles] = useState<Record<string, PlayerProfile>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRefreshingProfiles, setIsRefreshingProfiles] = useState(false);
+  const [whsRefreshed, setWhsRefreshed] = useState(false);
   
   // Refs for cleanup and debouncing
   const debounceTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
@@ -228,6 +230,26 @@ export const FlightHandicapSetup: React.FC = () => {
       logger.error('Failed to load player profiles', error);
     }
   }, [currentFlight?.players]);
+
+  const handleRefreshWHS = useCallback(async () => {
+    try {
+      setIsRefreshingProfiles(true);
+      await loadPlayerProfiles();
+      setWhsRefreshed(true);
+      toast({
+        title: "WHS indexes refreshed",
+        description: "Latest WHS indexes loaded from player profiles.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Refresh failed",
+        description: "Could not refresh WHS indexes. Please try again.",
+      });
+    } finally {
+      setIsRefreshingProfiles(false);
+    }
+  }, [loadPlayerProfiles, toast]);
 
   /**
    * Initialize player status tracking
@@ -585,11 +607,22 @@ export const FlightHandicapSetup: React.FC = () => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
             Set Player Handicaps
           </CardTitle>
+          {currentFlight.createdBy === user?.id && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefreshWHS}
+              disabled={isRefreshingProfiles}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshingProfiles ? 'animate-spin' : ''}`} />
+              {isRefreshingProfiles ? 'Refreshing...' : 'Refresh WHS'}
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
@@ -704,9 +737,10 @@ export const FlightHandicapSetup: React.FC = () => {
                             type="text"
                             placeholder="0.0"
                             value={handicapValue}
-                            onChange={(e) => handleHandicapChange(player.id, e.target.value)}
+                            readOnly
+                            disabled
+                            aria-label="WHS index (display only)"
                             className="w-20 text-center"
-                            disabled={!isCurrentUser || isReady || isSyncing}
                           />
                           {isCurrentUser && hasHandicap && !isReady && !isSyncing && (
                             <Button
