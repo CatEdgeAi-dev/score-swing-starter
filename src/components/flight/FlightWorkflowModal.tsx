@@ -77,6 +77,13 @@ export const FlightWorkflowModal: React.FC<FlightWorkflowModalProps> = ({
     }
   }, [isOpen]);
 
+  // React to validation being started while modal is open
+  useEffect(() => {
+    if (!isOpen || !currentFlight) return;
+    if (needsValidation && currentStep !== 'validation') {
+      setCurrentStep('validation');
+    }
+  }, [needsValidation, isOpen, currentFlight?.id, currentStep]);
   const handleStartRound = () => {
     navigate('/scorecard');
     onClose();

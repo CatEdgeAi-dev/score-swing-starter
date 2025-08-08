@@ -106,9 +106,10 @@ export const FlightHandicapValidation: React.FC = () => {
           <div className="space-y-4">
             <h3 className="font-semibold">Validate Other Players</h3>
             {otherPlayers.map((player) => {
-              const validation = getValidationStatus(player.id);
+              const targetId = player.userId || player.id;
+              const validation = getValidationStatus(targetId);
               const summary = getPlayerValidationSummary(
-                player.userId || player.id, 
+                targetId, 
                 currentFlight.players.length
               );
               
