@@ -56,6 +56,7 @@ export const FlightHandicapSetup: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshingProfiles, setIsRefreshingProfiles] = useState(false);
   const [whsRefreshed, setWhsRefreshed] = useState(false);
+  const [draftHandicaps, setDraftHandicaps] = useState<Record<string, string>>({});
   
   // Refs for cleanup and debouncing
   const debounceTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
@@ -404,86 +405,93 @@ export const FlightHandicapSetup: React.FC = () => {
   }, [toast]);
 
   /**
-   * Handle handicap input changes with validation and debounced saving
+   * Handle handicap input changes locally without committing to DB
+   * Allows free typing and only commits on explicit "Lock In"
    */
   const handleHandicapChange = useCallback((playerId: string, handicap: string) => {
     const player = currentFlight?.players.find(p => p.id === playerId);
     if (!player || !user) return;
-    
+
     // Only allow current user to edit their own handicap or guest handicaps
     if (player.userId && player.userId !== user.id) return;
-    
-    // Validate handicap format (0-54 with up to 1 decimal place)
-    const handicapRegex = /^\d{0,2}(\.\d{0,1})?$/;
+
+    // Validate format (0-54 with up to 1 decimal) while allowing interim states like "5."
+    const handicapRegex = /^\d{0,2}(\.?\d{0,1})?$/;
     if (handicap !== '' && !handicapRegex.test(handicap)) return;
-    
-    // Update local state immediately for responsive UI
-    setHandicaps(prev => ({ ...prev, [playerId]: handicap }));
-    
-    // Don't change status if already locked
-    setHandicapStatuses(prev => ({ 
-      ...prev, 
-      [playerId]: prev[playerId] === 'ready' ? 'ready' : 'editing' 
+
+    // Update draft value only (do NOT write to DB here)
+    setDraftHandicaps(prev => ({ ...prev, [playerId]: handicap }));
+
+    // Keep status as editing unless already locked
+    setHandicapStatuses(prev => ({
+      ...prev,
+      [playerId]: prev[playerId] === 'ready' ? 'ready' : 'editing',
     }));
-    
-    // Debounced save to database
-    const handicapValue = handicap === '' ? null : parseFloat(handicap);
-    debouncedSaveHandicap(playerId, handicapValue, player);
-  }, [currentFlight?.players, user, debouncedSaveHandicap]);
+  }, [currentFlight?.players, user]);
 
   const handleLockInHandicap = async (playerId: string) => {
     const player = currentFlight.players.find(p => p.id === playerId);
-    if (!player || !handicaps[playerId]?.trim()) return;
-    
+    if (!player) return;
+
+    // Prefer draft value; fall back to saved value if present
+    const draftStr = (draftHandicaps[playerId] ?? '').trim();
+    const savedStr = (handicaps[playerId] ?? '').trim();
+    const effectiveStr = draftStr || savedStr;
+
+    if (!effectiveStr) return;
+
+    const value = parseFloat(effectiveStr);
+    if (Number.isNaN(value) || value < 0 || value > 54) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid handicap',
+        description: 'Please enter a number between 0.0 and 54.0',
+      });
+      return;
+    }
+
     try {
       setHandicapStatuses(prev => ({ ...prev, [playerId]: 'syncing' }));
-      
-      logger.info('🔒 Locking in handicap for cross-player visibility', {
+
+      logger.info('🔒 Locking in handicap (commit to DB now)', {
         player: player.name,
         playerId,
-        handicap: handicaps[playerId],
-        userId: player.userId
+        value,
+        userId: player.userId,
       });
-      
-      // Enhanced update query with better targeting
-      const updateQuery = player.userId 
-        ? supabase
-            .from('flight_players')
-            .update({ handicap_locked: true })
-            .eq('flight_id', currentFlight.id)
-            .eq('user_id', player.userId)
-        : supabase
-            .from('flight_players')
-            .update({ handicap_locked: true })
-            .eq('flight_id', currentFlight.id)
-            .eq('guest_name', player.name);
 
-      const { data, error } = await updateQuery.select();
+      // Commit handicap and lock in a single update using the DB row id
+      const { data, error } = await supabase
+        .from('flight_players')
+        .update({ handicap: value, handicap_locked: true })
+        .eq('id', playerId)
+        .select();
 
       if (error) throw error;
-      
-      logger.info('✅ Handicap locked successfully', {
+
+      logger.info('✅ Handicap saved and locked successfully', {
         player: player.name,
-        updatedRecords: data?.length || 0
+        updatedRecords: data?.length || 0,
       });
-      
+
+      // Clear draft and mark ready
+      setDraftHandicaps(prev => ({ ...prev, [playerId]: '' }));
       setHandicapStatuses(prev => ({ ...prev, [playerId]: 'ready' }));
-      
+
       toast({
-        title: "Handicap Locked In",
+        title: 'Handicap Locked In',
         description: `${player.name}'s handicap is confirmed and visible to all players.`,
       });
-      
-      // Force reload to ensure all players see the update
+
+      // Reload to sync across players
       setTimeout(() => loadFlightHandicaps(), 100);
-      
     } catch (error) {
       logger.error('❌ Error locking handicap', error);
       setHandicapStatuses(prev => ({ ...prev, [playerId]: 'editing' }));
       toast({
-        variant: "destructive",
-        title: "Lock Failed",
-        description: "Failed to lock handicap. Please try again.",
+        variant: 'destructive',
+        title: 'Lock Failed',
+        description: 'Failed to lock handicap. Please try again.',
       });
     }
   };
@@ -629,14 +637,18 @@ export const FlightHandicapSetup: React.FC = () => {
             Each player needs to set their current WHS handicap index before the round can begin.
           </p>
 
-          {/* Self handicap fallback: always show an input for the current user when not set */}
+          {/* Self handicap input: always available when you're in editing state */}
           {(() => {
             const myPlayer = currentFlight.players.find(p => p.userId === user?.id);
             if (!myPlayer) return null;
-            const myHandicapValue = handicaps[myPlayer.id] || '';
+            const mySavedValue = (handicaps[myPlayer.id] || '').trim();
+            const myDraftValue = (draftHandicaps[myPlayer.id] ?? '').trim();
             const myStatus = handicapStatuses[myPlayer.id] || 'editing';
-            const showSelfInputFallback = myHandicapValue.trim() === '' && myStatus !== 'syncing';
-            if (!showSelfInputFallback) return null;
+            const showSelfInput = myStatus !== 'syncing' && myStatus !== 'ready';
+            if (!showSelfInput) return null;
+
+            const effectiveStr = myDraftValue || mySavedValue;
+
             return (
               <div className="p-4 border rounded-lg bg-background/50">
                 <Label htmlFor={`self-handicap-${myPlayer.id}`} className="text-sm mb-2 inline-block">
@@ -647,14 +659,14 @@ export const FlightHandicapSetup: React.FC = () => {
                     id={`self-handicap-${myPlayer.id}`}
                     type="text"
                     placeholder="0.0"
-                    value={myHandicapValue}
+                    value={effectiveStr}
                     onChange={(e) => handleHandicapChange(myPlayer.id, e.target.value)}
                     className="w-24 text-center"
                   />
                   <Button
                     size="sm"
                     onClick={() => handleLockInHandicap(myPlayer.id)}
-                    disabled={!myHandicapValue.trim()}
+                    disabled={!effectiveStr}
                   >
                     <Lock className="h-3 w-3 mr-1" />
                     Lock In
@@ -825,9 +837,17 @@ export const FlightHandicapSetup: React.FC = () => {
             </div>
           )}
 
+          {currentFlight.createdBy === user?.id && !whsRefreshed && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-sm text-amber-800">
+                Please refresh WHS indexes before proceeding. Use the "Refresh WHS" button above.
+              </p>
+            </div>
+          )}
+
           <Button
             onClick={handleSetHandicaps}
-            disabled={!allPlayersReady || isSubmitting}
+            disabled={!allPlayersReady || isSubmitting || (currentFlight.createdBy === user?.id && !whsRefreshed)}
             className="w-full"
           >
             {isSubmitting ? 'Setting up...' : 'Continue to Validation'}
