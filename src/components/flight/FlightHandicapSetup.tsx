@@ -57,10 +57,51 @@ export const FlightHandicapSetup: React.FC = () => {
   const [isRefreshingProfiles, setIsRefreshingProfiles] = useState(false);
   const [whsRefreshed, setWhsRefreshed] = useState(false);
   const [draftHandicaps, setDraftHandicaps] = useState<Record<string, string>>({});
+  const [myDisplayName, setMyDisplayName] = useState<string | null>(null);
   
   // Refs for cleanup and debouncing
   const debounceTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
   const realtimeChannel = useRef<any>(null);
+
+  // Load current user's display name for smarter player matching (handles guest additions)
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .single();
+        setMyDisplayName(data?.display_name || null);
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, [user?.id]);
+
+  // Find the player's row that belongs to the current user
+  const findMyPlayer = useCallback(() => {
+    if (!currentFlight?.players || !user) return null;
+
+    // Prefer strict match by userId
+    const byUserId = currentFlight.players.find(p => p.userId === user.id);
+    if (byUserId) return byUserId;
+
+    // Build fallback candidate names for guest matching
+    const emailLocal = user.email ? user.email.split('@')[0] : null;
+    const candidates = [myDisplayName, emailLocal, user.email]
+      .filter(Boolean)
+      .map(s => String(s).trim().toLowerCase());
+
+    // Fallback: match by any candidate name if user was added as a guest
+    const byName = currentFlight.players.find(
+      p => !p.userId && p.name && candidates.includes(p.name.trim().toLowerCase())
+    );
+    if (byName) return byName;
+
+    return null;
+  }, [currentFlight?.players, user?.id, user?.email, myDisplayName]);
 
   /**
    * Load current handicap data from database with enhanced cross-player visibility
@@ -412,8 +453,9 @@ export const FlightHandicapSetup: React.FC = () => {
     const player = currentFlight?.players.find(p => p.id === playerId);
     if (!player || !user) return;
 
-    // Only allow current user to edit their own handicap or guest handicaps
-    if (player.userId && player.userId !== user.id) return;
+    // Only allow the row that belongs to the current user (supports guest fallback)
+    const mine = findMyPlayer();
+    if (!mine || mine.id !== playerId) return;
 
     // Validate format (0-54 with up to 1 decimal) while allowing interim states like "5."
     const handicapRegex = /^\d{0,2}(\.?\d{0,1})?$/;
@@ -427,7 +469,7 @@ export const FlightHandicapSetup: React.FC = () => {
       ...prev,
       [playerId]: prev[playerId] === 'ready' ? 'ready' : 'editing',
     }));
-  }, [currentFlight?.players, user]);
+  }, [currentFlight?.players, user, findMyPlayer]);
 
   const handleLockInHandicap = async (playerId: string) => {
     const player = currentFlight.players.find(p => p.id === playerId);
@@ -639,7 +681,7 @@ export const FlightHandicapSetup: React.FC = () => {
 
           {/* Self handicap input: always available when you're in editing state */}
           {(() => {
-            const myPlayer = currentFlight.players.find(p => p.userId === user?.id);
+            const myPlayer = findMyPlayer();
             if (!myPlayer) return null;
             const mySavedValue = (handicaps[myPlayer.id] || '').trim();
             const myDraftValue = (draftHandicaps[myPlayer.id] ?? '').trim();
@@ -678,7 +720,8 @@ export const FlightHandicapSetup: React.FC = () => {
 
           <div className="space-y-4">
             {currentFlight.players.map((player) => {
-              const isCurrentUser = player.userId === user?.id;
+              const myPlayerRef = findMyPlayer();
+              const isCurrentUser = myPlayerRef?.id === player.id;
               const savedValue = handicaps[player.id] || '';
               const draftValue = draftHandicaps[player.id] ?? '';
               const displayValue = isCurrentUser && draftValue !== '' ? draftValue : savedValue;
