@@ -78,7 +78,9 @@ export const Breadcrumbs: React.FC = () => {
       }
     }
   } else {
-    breadcrumbItems[0].isLast = true;
+    if (breadcrumbItems.length > 0) {
+      breadcrumbItems[0].isLast = true;
+    }
   }
 
   return (

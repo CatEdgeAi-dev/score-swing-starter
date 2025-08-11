@@ -38,8 +38,8 @@ export const FlightHandicapValidation: React.FC = () => {
     getValidationStatus,
     getPlayerValidationSummary
   } = useHandicapValidation({
-    flightId: currentFlight?.id,
-    currentUserId: user?.id
+    ...(currentFlight?.id ? { flightId: currentFlight.id } : {}),
+    ...(user?.id ? { currentUserId: user.id } : {}),
   });
 
   /**

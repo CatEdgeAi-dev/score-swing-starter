@@ -94,12 +94,14 @@ export const FlightManagement: React.FC<FlightManagementProps> = ({
       // Split search terms for more flexible name matching
       const searchTerms = friendSearch.trim().toLowerCase().split(' ').filter(term => term.length > 0);
       
-      // Build a more flexible search query that matches any word in any order
       let query = supabase
         .from('profiles')
         .select('id, display_name, whs_index')
-        .neq('id', user?.id) // Exclude current user
         .limit(10);
+
+      if (user?.id) {
+        query = query.neq('id', user.id); // Exclude current user when available
+      }
 
       // Create OR conditions for each search term against display_name
       if (searchTerms.length > 0) {
@@ -118,7 +120,7 @@ export const FlightManagement: React.FC<FlightManagementProps> = ({
         name: profile.display_name || 'Unknown User',
         isRegistered: true,
         userId: profile.id,
-        handicap: profile.whs_index ? Number(profile.whs_index) : undefined
+        ...(profile.whs_index != null ? { handicap: Number(profile.whs_index) } : {})
       }));
 
       setSearchResults(searchResults);

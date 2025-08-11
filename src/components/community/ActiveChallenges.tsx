@@ -45,7 +45,18 @@ export const ActiveChallenges = () => {
         .order('start_date', { ascending: true });
 
       if (error) throw error;
-      setChallenges(data || []);
+      const normalized: Challenge[] = (data || []).map((c: any) => ({
+        id: c.id,
+        title: c.title || '',
+        description: c.description ?? '',
+        challenge_type: c.challenge_type || 'general',
+        target_metric: c.target_metric || '',
+        target_value: c.target_value ?? 0,
+        start_date: c.start_date,
+        end_date: c.end_date,
+        reward_description: c.reward_description ?? ''
+      }));
+      setChallenges(normalized);
     } catch (error) {
       console.error('Error fetching challenges:', error);
     } finally {

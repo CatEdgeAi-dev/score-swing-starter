@@ -44,7 +44,7 @@ export const FlightCreationForm: React.FC<FlightCreationFormProps> = ({
       name: currentUser.name,
       isRegistered: true,
       userId: currentUser.id,
-      email: currentUser.email
+      ...(currentUser.email ? { email: currentUser.email } : {})
     }
   ]);
   const [isCreating, setIsCreating] = useState(false);

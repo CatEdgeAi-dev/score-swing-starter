@@ -79,10 +79,14 @@ export function CommunityProfileForm() {
       if (error) throw error;
       
       if (data) {
-        setProfile(data);
+        const sanitized = Object.fromEntries(
+          Object.entries(data).map(([key, value]) => [key, value === null ? undefined : value])
+        ) as CommunityProfile;
+        setProfile(sanitized);
         // Set form values
-        Object.keys(data).forEach(key => {
-          setValue(key as keyof CommunityProfile, data[key]);
+        Object.keys(sanitized).forEach(key => {
+          // @ts-expect-error dynamic form key mapping
+          setValue(key as keyof CommunityProfile, (sanitized as any)[key]);
         });
       }
     } catch (error) {
@@ -208,24 +212,24 @@ export function CommunityProfileForm() {
               />
             </div>
             
-            <div>
-              <Label htmlFor="experience_level">Experience Level</Label>
-              <Select value={watchedValues.experience_level} onValueChange={(value) => setValue('experience_level', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select experience level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="intermediate">Intermediate</SelectItem>
-                  <SelectItem value="advanced">Advanced</SelectItem>
-                  <SelectItem value="professional">Professional</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div>
+                <Label htmlFor="experience_level">Experience Level</Label>
+                <Select value={watchedValues.experience_level ?? ''} onValueChange={(value) => setValue('experience_level', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select experience level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                    <SelectItem value="professional">Professional</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
             <div>
               <Label htmlFor="playing_frequency">Playing Frequency</Label>
-              <Select value={watchedValues.playing_frequency} onValueChange={(value) => setValue('playing_frequency', value)}>
+              <Select value={watchedValues.playing_frequency ?? ''} onValueChange={(value) => setValue('playing_frequency', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="How often do you play?" />
                 </SelectTrigger>
@@ -240,7 +244,7 @@ export function CommunityProfileForm() {
 
             <div>
               <Label htmlFor="favorite_course_type">Favorite Course Type</Label>
-              <Select value={watchedValues.favorite_course_type} onValueChange={(value) => setValue('favorite_course_type', value)}>
+              <Select value={watchedValues.favorite_course_type ?? ''} onValueChange={(value) => setValue('favorite_course_type', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select course type" />
                 </SelectTrigger>
@@ -318,7 +322,7 @@ export function CommunityProfileForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="age_range">Age Range</Label>
-              <Select value={watchedValues.age_range} onValueChange={(value) => setValue('age_range', value)}>
+              <Select value={watchedValues.age_range ?? ''} onValueChange={(value) => setValue('age_range', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select age range" />
                 </SelectTrigger>
@@ -414,7 +418,7 @@ export function CommunityProfileForm() {
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="mentoring_interest">Mentoring Interest</Label>
-            <Select value={watchedValues.mentoring_interest} onValueChange={(value) => setValue('mentoring_interest', value)}>
+            <Select value={watchedValues.mentoring_interest ?? ''} onValueChange={(value) => setValue('mentoring_interest', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select mentoring preference" />
               </SelectTrigger>
@@ -431,8 +435,8 @@ export function CommunityProfileForm() {
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="open_to_matches"
-                checked={watchedValues.open_to_matches}
-                onCheckedChange={(checked) => setValue('open_to_matches', checked as boolean)}
+                checked={!!watchedValues.open_to_matches}
+                onCheckedChange={(checked) => setValue('open_to_matches', !!checked)}
               />
               <Label htmlFor="open_to_matches">Open to playing with new people</Label>
             </div>
@@ -440,8 +444,8 @@ export function CommunityProfileForm() {
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="group_play_interest"
-                checked={watchedValues.group_play_interest}
-                onCheckedChange={(checked) => setValue('group_play_interest', checked as boolean)}
+                checked={!!watchedValues.group_play_interest}
+                onCheckedChange={(checked) => setValue('group_play_interest', !!checked)}
               />
               <Label htmlFor="group_play_interest">Interested in group play events</Label>
             </div>

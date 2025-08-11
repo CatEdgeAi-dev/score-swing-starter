@@ -260,11 +260,12 @@ export const FlightHandicapSetup: React.FC = () => {
         let hasChanges = false;
         
         currentFlight.players.forEach(player => {
-          if (player.userId && 
-              profileMap[player.userId]?.whsIndex !== null && 
-              !updatedHandicaps[player.id]) {
-            updatedHandicaps[player.id] = profileMap[player.userId].whsIndex!.toString();
-            hasChanges = true;
+          if (player.userId) {
+            const whs = profileMap[player.userId]?.whsIndex;
+            if (whs != null && !updatedHandicaps[player.id]) {
+              updatedHandicaps[player.id] = String(whs);
+              hasChanges = true;
+            }
           }
         });
         
@@ -474,6 +475,7 @@ export const FlightHandicapSetup: React.FC = () => {
   }, [currentFlight?.players, user, findMyPlayer]);
 
   const handleLockInHandicap = async (playerId: string) => {
+    if (!currentFlight) return;
     const player = currentFlight.players.find(p => p.id === playerId);
     if (!player) return;
 
@@ -541,6 +543,7 @@ export const FlightHandicapSetup: React.FC = () => {
   };
 
   const handleUnlockHandicap = async (playerId: string) => {
+    if (!currentFlight) return;
     const player = currentFlight.players.find(p => p.id === playerId);
     if (!player) return;
     
@@ -633,7 +636,7 @@ export const FlightHandicapSetup: React.FC = () => {
   
   const allHandicapsSet = currentFlight.players.every(
     player => {
-      const hasHandicap = handicaps[player.id] && handicaps[player.id].trim() !== '';
+      const hasHandicap = (handicaps[player.id]?.trim() ?? '') !== '';
       console.log(`Button enable check - Player ${player.name} (${player.id}): handicap="${handicaps[player.id]}", hasHandicap=${hasHandicap}`);
       return hasHandicap;
     }
@@ -760,9 +763,9 @@ export const FlightHandicapSetup: React.FC = () => {
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {player.isRegistered ? 'Registered Player' : 'Guest Player'}
-                            {player.userId && playerProfiles[player.userId] && (
+                          {player.userId && playerProfiles[player.userId] && (
                               <span className="ml-2 text-xs">
-                                WHS: {playerProfiles[player.userId].whsIndex ?? 'Not set'}
+                                WHS: {playerProfiles[player.userId]?.whsIndex ?? 'Not set'}
                               </span>
                             )}
                           </p>

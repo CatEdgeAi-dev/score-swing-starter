@@ -44,7 +44,7 @@ export const FlightCreation: React.FC<FlightCreationProps> = ({
       name: currentUser.name,
       isRegistered: true,
       userId: currentUser.id,
-      email: currentUser.email
+      ...(currentUser.email ? { email: currentUser.email } : {})
     }
   ]);
   const { toast } = useToast();
@@ -102,7 +102,7 @@ export const FlightCreation: React.FC<FlightCreationProps> = ({
         name: currentUser.name,
         isRegistered: true,
         userId: currentUser.id,
-        email: currentUser.email
+        ...(currentUser.email ? { email: currentUser.email } : {})
       }]);
       setIsOpen(false);
     } catch (error) {

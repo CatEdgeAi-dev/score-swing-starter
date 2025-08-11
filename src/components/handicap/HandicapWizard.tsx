@@ -522,7 +522,10 @@ export const HandicapWizard: React.FC<HandicapWizardProps> = ({
                 onChange={(e) => {
                   setWhsIndex(e.target.value);
                   const error = validateWhsIndex(e.target.value);
-                  setErrors(prev => ({ ...prev, whsIndex: error }));
+                  setErrors(prev => {
+                    const { whsIndex: _omit, ...rest } = prev;
+                    return error ? { ...rest, whsIndex: error } : rest;
+                  });
                 }}
                 className={`h-12 text-lg ${errors.whsIndex ? 'border-destructive' : ''}`}
               />

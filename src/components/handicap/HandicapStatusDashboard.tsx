@@ -115,8 +115,8 @@ export const HandicapStatusDashboard: React.FC<HandicapStatusDashboardProps> = (
         }}
         onCancel={() => setShowWizard(false)}
         initialData={{
-          whs_index: userProfile?.whs_index,
-          proof_image_url: userProfile?.handicap_proof_url
+          ...(userProfile?.whs_index != null ? { whs_index: userProfile.whs_index } : {}),
+          ...(userProfile?.handicap_proof_url ? { proof_image_url: userProfile.handicap_proof_url } : {})
         }}
       />
     );
