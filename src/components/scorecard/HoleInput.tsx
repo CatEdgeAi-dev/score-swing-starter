@@ -23,6 +23,8 @@ export const HoleInput: React.FC<HoleInputProps> = ({ holeNumber }) => {
   };
   const hole = holes[holeNumber] ?? defaultHole;
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const handleStrokesChange = (change: number) => {
     const newStrokes = Math.max(0, hole.strokes + change);
     updateHole(holeNumber, { strokes: newStrokes });

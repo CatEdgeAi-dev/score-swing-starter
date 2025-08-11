@@ -27,7 +27,15 @@ export const SinglePanelInput: React.FC = () => {
   };
 
   const getScoreColor = (holeNumber: number) => {
-    const hole = holes[holeNumber];
+    const hole = holes[holeNumber] ?? {
+      strokes: 0,
+      putts: 0,
+      fairwayHit: false,
+      greenInRegulation: false,
+      upAndDown: false,
+      notes: '',
+      par: defaultPars[holeNumber - 1] ?? 4,
+    };
     const scoreVsPar = hole.strokes - hole.par;
     if (scoreVsPar <= -2) return 'text-blue-600 bg-blue-50';
     if (scoreVsPar === -1) return 'text-green-600 bg-green-50';
@@ -38,7 +46,15 @@ export const SinglePanelInput: React.FC = () => {
   };
 
   const getScoreText = (holeNumber: number) => {
-    const hole = holes[holeNumber];
+    const hole = holes[holeNumber] ?? {
+      strokes: 0,
+      putts: 0,
+      fairwayHit: false,
+      greenInRegulation: false,
+      upAndDown: false,
+      notes: '',
+      par: defaultPars[holeNumber - 1] ?? 4,
+    };
     const scoreVsPar = hole.strokes - hole.par;
     if (hole.strokes === 0) return '';
     if (scoreVsPar <= -2) return 'Eagle+';
@@ -81,7 +97,15 @@ export const SinglePanelInput: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-1 gap-3">
             {Array.from({ length: 9 }, (_, i) => i + 1).map((holeNumber) => {
-              const hole = holes[holeNumber];
+              const hole = holes[holeNumber] ?? {
+                strokes: 0,
+                putts: 0,
+                fairwayHit: false,
+                greenInRegulation: false,
+                upAndDown: false,
+                notes: '',
+                par: defaultPars[holeNumber - 1] ?? 4,
+              };
               return (
                 <div
                   key={holeNumber}
@@ -189,7 +213,15 @@ export const SinglePanelInput: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-1 gap-3">
             {Array.from({ length: 9 }, (_, i) => i + 10).map((holeNumber) => {
-              const hole = holes[holeNumber];
+               const hole = holes[holeNumber] ?? {
+                strokes: 0,
+                putts: 0,
+                fairwayHit: false,
+                greenInRegulation: false,
+                upAndDown: false,
+                notes: '',
+                par: defaultPars[holeNumber - 1] ?? 4,
+              };
               return (
                 <div
                   key={holeNumber}

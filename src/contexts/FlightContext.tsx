@@ -118,7 +118,7 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           name: flightData.name.trim(),
           course_name: flightData.courseName.trim(),
           created_by: user.id,
-          date_played: new Date().toISOString().split('T')[0],
+          date_played: new Date().toISOString().split('T')[0] as string,
         })
         .select()
         .single();
@@ -347,15 +347,13 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         });
 
-      const players: Player[] = await Promise.all(playerPromises);
-
-      console.log('✅ Transformed players with database UUIDs:', players.map(p => ({
-        dbId: p.id, // Now using real database UUID
-        name: p.name,
-        isRegistered: p.isRegistered,
-        userId: p.userId || 'guest',
-        handicap: p.handicap
-      })));
+      const players: Player[] = await Promise.all(playerPromises).then(list => list.map(p => ({
+        id: p.id as string,
+        name: p.name as string,
+        isRegistered: Boolean((p as any).userId),
+        userId: (p as any).userId as string | undefined,
+        handicap: typeof (p as any).handicap === 'number' ? (p as any).handicap as number : undefined,
+      })))
 
       const flight: Flight = {
         id: flightData.id,
