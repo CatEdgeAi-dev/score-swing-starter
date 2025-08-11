@@ -26,7 +26,7 @@ const Flights = () => {
     }
   }, [currentFlight]);
 
-  const getUserName = () => {
+  const getUserName = (): string => {
     if (user?.email) {
       return user.email.split('@')[0];
     }

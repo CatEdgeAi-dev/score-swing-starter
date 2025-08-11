@@ -23,6 +23,7 @@ import { FlightPlayerSelector } from '@/components/flight/FlightPlayerSelector';
 import { useFlightContext } from '@/contexts/FlightContext';
 import { useToast } from '@/hooks/use-toast';
 import { Share2, ArrowLeft, Plus, Grid3X3, Focus } from 'lucide-react';
+import { makeSafeHole } from '@/components/scorecard/hole-utils';
 
 const ScorecardContent = () => {
   const navigate = useNavigate();
@@ -63,10 +64,10 @@ const ScorecardContent = () => {
 
   // Find holes with data for navigation indicators
   const holesWithData = useMemo(() => {
-    const holesArray = [];
+    const holesArray: number[] = [];
     for (let i = 1; i <= 18; i++) {
-      const hole = holes[i];
-      if (hole.strokes > 0 || hole.putts > 0 || hole.notes.trim() !== '') {
+      const h = makeSafeHole(holes[i], i);
+      if (h.strokes > 0 || h.putts > 0 || h.notes.trim() !== '') {
         holesArray.push(i);
       }
     }
@@ -75,8 +76,8 @@ const ScorecardContent = () => {
   // Find the furthest hole with data for progress
   const furthestHole = useMemo(() => {
     for (let i = 18; i >= 1; i--) {
-      const hole = holes[i];
-      if (hole.strokes > 0 || hole.putts > 0 || hole.notes.trim() !== '') {
+      const h = makeSafeHole(holes[i], i);
+      if (h.strokes > 0 || h.putts > 0 || h.notes.trim() !== '') {
         return i;
       }
     }
@@ -114,10 +115,10 @@ const ScorecardContent = () => {
 
   // Quick action handlers
   const handleQuickStroke = (increment: boolean) => {
-    const hole = holes[currentHole];
+    const h = makeSafeHole(holes[currentHole], currentHole);
     const newStrokes = increment 
-      ? hole.strokes + 1 
-      : Math.max(0, hole.strokes - 1);
+      ? h.strokes + 1 
+      : Math.max(0, h.strokes - 1);
     
     updateHole(currentHole, { strokes: newStrokes });
     
@@ -144,9 +145,10 @@ const ScorecardContent = () => {
 
   const handleBackNavigation = () => {
     // Check if there's any data in the scorecard
-    const hasData = Object.values(holes).some(hole => 
-      hole.strokes > 0 || hole.putts > 0 || hole.notes.trim() !== ''
-    );
+    const hasData = Array.from({ length: 18 }, (_, idx) => idx + 1).some((i) => {
+      const h = makeSafeHole(holes[i], i);
+      return h.strokes > 0 || h.putts > 0 || h.notes.trim() !== '';
+    });
     
     if (hasData) {
       setShowBackDialog(true);

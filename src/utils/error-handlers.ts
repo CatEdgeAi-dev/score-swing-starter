@@ -20,8 +20,8 @@ export const createError = (
   userMessage?: string
 ): AppError => {
   const error = new Error(message) as AppError;
-  error.code = code;
-  error.statusCode = statusCode;
+  if (code !== undefined) error.code = code;
+  if (statusCode !== undefined) error.statusCode = statusCode;
   error.userMessage = userMessage || 'An unexpected error occurred';
   return error;
 };
@@ -70,8 +70,8 @@ export const handleSupabaseError = (
     
   return createError(
     error?.message || 'Supabase error',
-    error?.code || 'SUPABASE_ERROR',
-    error?.status || 500,
+    error?.code,
+    error?.status,
     userMessage
   );
 };

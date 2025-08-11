@@ -58,7 +58,7 @@ const RoundSelection = () => {
     ? Math.round(rounds.reduce((sum, round) => sum + round.total_score, 0) / totalRounds)
     : null;
 
-  const getUserName = () => {
+  const getUserName = (): string => {
     if (user?.email) {
       return user.email.split('@')[0];
     }
@@ -68,7 +68,7 @@ const RoundSelection = () => {
   const currentUser = {
     id: user?.id || '',
     name: getUserName(),
-    email: user?.email
+    ...(user?.email ? { email: user.email } : {}),
   };
 
   return (

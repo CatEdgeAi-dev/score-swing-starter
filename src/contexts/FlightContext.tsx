@@ -367,8 +367,8 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         dateCreated: String(flightData.created_at),
         players: players,
         createdBy: String(flightData.created_by),
-        weather: flightData.weather ?? undefined,
-        datePlayedInfo: flightData.date_played ?? undefined,
+        ...(flightData.weather ? { weather: String(flightData.weather) } : {}),
+        ...(flightData.date_played ? { datePlayedInfo: String(flightData.date_played) } : {}),
         status: 'handicap_setup'
       };
 

@@ -218,7 +218,7 @@ const Onboarding = () => {
     try {
       // Save profile data to Supabase
       const profilePayload = {
-        id: user?.id,
+        ...(user?.id ? { id: user.id } : {}),
         ...profileData,
         whs_index: profileData.whs_index ? parseFloat(profileData.whs_index) : null,
         community_onboarding_completed: true,
@@ -252,7 +252,7 @@ const Onboarding = () => {
     return null;
   }
 
-  const step = onboardingSteps[currentStep];
+  const step = onboardingSteps[currentStep] ?? onboardingSteps[0];
   const Icon = step.icon;
 
   const renderStepContent = () => {

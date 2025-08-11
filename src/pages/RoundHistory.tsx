@@ -189,6 +189,7 @@ const RoundHistory = () => {
                 <div className="space-y-2">
                   {(() => {
                     const recentRounds = rounds.slice(0, 3);
+                    if (recentRounds.length < 3) return null;
                     const trend = recentRounds[0].totalScore - recentRounds[2].totalScore;
                     return (
                       <>

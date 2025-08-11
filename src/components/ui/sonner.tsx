@@ -5,12 +5,14 @@ type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme } = useTheme()
-  type ThemeMode = "light" | "dark" | "system"
-  const themeValue: ThemeMode = theme === "light" || theme === "dark" || theme === "system" ? theme : "system"
+
+  const normalizeTheme = (t?: string): "light" | "dark" | "system" => {
+    return t === "light" || t === "dark" || t === "system" ? t : "system"
+  }
 
   return (
     <Sonner
-      theme={themeValue as ToasterProps["theme"]}
+      theme={normalizeTheme(theme)}
       className="toaster group"
       toastOptions={{
         classNames: {

@@ -60,7 +60,7 @@ export const useRounds = () => {
       const roundsList: Round[] = (roundsData || []).map((round: any) => ({
         id: String(round.id),
         user_id: String(round.user_id),
-        course_name: round.course_name ?? undefined,
+        ...(round.course_name != null ? { course_name: String(round.course_name) } : {}),
         date_played: String(round.date_played),
         total_score: Number(round.total_score),
         total_putts: Number(round.total_putts),
@@ -173,7 +173,7 @@ export const useRounds = () => {
       const normalized: Round = {
         id: String(round.id),
         user_id: String(round.user_id),
-        course_name: round.course_name ?? undefined,
+        ...(round.course_name != null ? { course_name: String(round.course_name) } : {}),
         date_played: String(round.date_played),
         total_score: Number(round.total_score),
         total_putts: Number(round.total_putts),
