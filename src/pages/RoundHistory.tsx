@@ -189,8 +189,11 @@ const RoundHistory = () => {
                 <div className="space-y-2">
                   {(() => {
                     const recentRounds = rounds.slice(0, 3);
-                    if (recentRounds.length < 3) return null;
-                    const trend = recentRounds[0].totalScore - recentRounds[2].totalScore;
+                    if (recentRounds.length < 3) {
+                      return null;
+                    }
+                    const [r0, , r2] = recentRounds;
+                    const trend = (r0?.totalScore ?? 0) - (r2?.totalScore ?? 0);
                     return (
                       <>
                         <div className="flex items-center justify-between text-sm">

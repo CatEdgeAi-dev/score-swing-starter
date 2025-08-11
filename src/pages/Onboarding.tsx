@@ -217,8 +217,14 @@ const Onboarding = () => {
     setLoading(true);
     try {
       // Save profile data to Supabase
+      if (!user?.id) {
+        toast.error('You must be signed in to complete onboarding.');
+        setLoading(false);
+        return;
+      }
+
       const profilePayload = {
-        ...(user?.id ? { id: user.id } : {}),
+        id: user.id,
         ...profileData,
         whs_index: profileData.whs_index ? parseFloat(profileData.whs_index) : null,
         community_onboarding_completed: true,
@@ -252,7 +258,9 @@ const Onboarding = () => {
     return null;
   }
 
-  const step = onboardingSteps[currentStep] ?? onboardingSteps[0];
+  const DEFAULT_STEP: OnboardingStep = { id: 'welcome', title: 'Welcome to Birdie Buddies!', description: 'Your complete golf tracking and social companion', icon: Trophy, type: 'intro' };
+  const getStep = (index: number): OnboardingStep => (onboardingSteps[index] ?? onboardingSteps[0] ?? DEFAULT_STEP);
+  const step = getStep(currentStep);
   const Icon = step.icon;
 
   const renderStepContent = () => {

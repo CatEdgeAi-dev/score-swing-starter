@@ -467,11 +467,12 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // If user is the creator and there are other players, transfer ownership
       if (currentFlight.createdBy === user.id && currentFlight.players.length > 1) {
         const nextOwner = currentFlight.players.find(p => p.userId && p.userId !== user.id);
-        if (nextOwner) {
+        const nextOwnerId = nextOwner?.userId;
+        if (nextOwnerId) {
           console.log('👑 Transferring ownership to:', nextOwner.name);
           await supabase
             .from('flights')
-            .update({ created_by: nextOwner.userId as string })
+            .update({ created_by: nextOwnerId })
             .eq('id', currentFlight.id);
         }
       }
@@ -589,10 +590,11 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [user]);
 
   const loadCurrentUserFlight = useCallback(async () => {
-    if (!user) return;
+    const uid = user?.id;
+    if (!uid) return;
 
     try {
-      console.log('🔍 Checking for current user flight:', user.id);
+      console.log('🔍 Checking for current user flight:', uid);
 
       // Check if user is in any active flight
       const { data: userFlight, error } = await supabase
@@ -608,7 +610,7 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             created_by
           )
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', uid)
         .eq('flights.date_played', new Date().toISOString().split('T')[0])
         .maybeSingle();
 
@@ -628,7 +630,7 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await supabase
           .from('flight_players')
           .delete()
-          .eq('user_id', user.id)
+          .eq('user_id', uid)
           .eq('flight_id', userFlight.flight_id);
         
         toast({
