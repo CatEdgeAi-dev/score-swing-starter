@@ -19,4 +19,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  test: {
+    environment: 'node',
+    include: ['tests/**/*.test.ts'],
+    reporters: 'default',
+    coverage: { provider: 'v8', reporter: ['text', 'lcov'] }
+  }
 }));
