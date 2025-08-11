@@ -57,13 +57,24 @@ export const useRounds = () => {
       if (error) throw error;
       console.log('Rounds loaded successfully:', roundsData?.length || 0);
       
-      // Add profile information to each round
-      const roundsWithProfile = roundsData?.map(round => ({
-        ...round,
-        profiles: profile
-      })) || [];
+      const roundsList: Round[] = (roundsData || []).map((round: any) => ({
+        id: String(round.id),
+        user_id: String(round.user_id),
+        course_name: round.course_name ?? undefined,
+        date_played: String(round.date_played),
+        total_score: Number(round.total_score),
+        total_putts: Number(round.total_putts),
+        fairways_hit: Number(round.fairways_hit),
+        greens_in_regulation: Number(round.greens_in_regulation),
+        created_at: String(round.created_at),
+        updated_at: String(round.updated_at),
+        ...(round.flight_id ? { flight_id: String(round.flight_id) } : {}),
+        ...(round.player_id ? { player_id: String(round.player_id) } : {}),
+        ...(round.is_flight_round ? { is_flight_round: Boolean(round.is_flight_round) } : {}),
+        ...(round.flight_name ? { flight_name: String(round.flight_name) } : {}),
+      }));
       
-      setRounds(roundsWithProfile);
+      setRounds(roundsList);
     } catch (error: any) {
       console.error('Error fetching rounds:', error);
       // Only show toast for real errors, not network issues during development
@@ -118,13 +129,13 @@ export const useRounds = () => {
         .from('rounds')
         .insert({
           user_id: user.id,
-          course_name: courseName,
+          course_name: courseName ?? null,
           total_score: totalScore,
           total_putts: totalPutts,
           fairways_hit: fairwaysHit,
           greens_in_regulation: greensInRegulation,
           is_flight_round: isFlightRound || false,
-          flight_name: flightName || null,
+          flight_name: flightName ?? null,
         })
         .select()
         .maybeSingle();
@@ -159,7 +170,24 @@ export const useRounds = () => {
       // Refresh rounds after saving
       await loadRounds();
 
-      return round;
+      const normalized: Round = {
+        id: String(round.id),
+        user_id: String(round.user_id),
+        course_name: round.course_name ?? undefined,
+        date_played: String(round.date_played),
+        total_score: Number(round.total_score),
+        total_putts: Number(round.total_putts),
+        fairways_hit: Number(round.fairways_hit),
+        greens_in_regulation: Number(round.greens_in_regulation),
+        created_at: String(round.created_at),
+        updated_at: String(round.updated_at),
+        ...(round.flight_id ? { flight_id: String(round.flight_id) } : {}),
+        ...(round.player_id ? { player_id: String(round.player_id) } : {}),
+        ...(round.is_flight_round ? { is_flight_round: Boolean(round.is_flight_round) } : {}),
+        ...(round.flight_name ? { flight_name: String(round.flight_name) } : {}),
+      };
+
+      return normalized;
     } catch (error: any) {
       console.error('Error saving round:', error);
       toast({
@@ -250,13 +278,24 @@ View full round details: ${shareUrl}`;
 
       if (error) throw error;
       
-      // Add profile information to each round
-      const roundsWithProfile = rounds?.map(round => ({
-        ...round,
-        profiles: profile
-      })) || [];
+      const roundsList: Round[] = (rounds || []).map((round: any) => ({
+        id: String(round.id),
+        user_id: String(round.user_id),
+        course_name: round.course_name ?? undefined,
+        date_played: String(round.date_played),
+        total_score: Number(round.total_score),
+        total_putts: Number(round.total_putts),
+        fairways_hit: Number(round.fairways_hit),
+        greens_in_regulation: Number(round.greens_in_regulation),
+        created_at: String(round.created_at),
+        updated_at: String(round.updated_at),
+        ...(round.flight_id ? { flight_id: String(round.flight_id) } : {}),
+        ...(round.player_id ? { player_id: String(round.player_id) } : {}),
+        ...(round.is_flight_round ? { is_flight_round: Boolean(round.is_flight_round) } : {}),
+        ...(round.flight_name ? { flight_name: String(round.flight_name) } : {}),
+      }));
       
-      return roundsWithProfile;
+      return roundsList;
     } catch (error: any) {
       console.error('Error fetching rounds:', error);
       toast({

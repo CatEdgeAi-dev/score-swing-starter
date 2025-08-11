@@ -66,7 +66,15 @@ export const SinglePanelInput: React.FC = () => {
   };
 
   const quickAdd = (holeNumber: number, type: 'strokes' | 'putts', amount: number) => {
-    const hole = holes[holeNumber];
+    const hole = holes[holeNumber] ?? {
+      strokes: 0,
+      putts: 0,
+      fairwayHit: false,
+      greenInRegulation: false,
+      upAndDown: false,
+      notes: '',
+      par: defaultPars[holeNumber - 1] ?? 4,
+    };
     const currentValue = type === 'strokes' ? hole.strokes : hole.putts;
     const newValue = Math.max(0, currentValue + amount);
     const maxValue = type === 'strokes' ? 20 : 10;
@@ -90,7 +98,7 @@ export const SinglePanelInput: React.FC = () => {
           <CardTitle className="text-lg flex items-center justify-between">
             <span>Front Nine (1-9)</span>
             <Badge variant="outline" className="text-xs">
-              {Object.values(holes).slice(0, 9).reduce((sum, hole) => sum + hole.strokes, 0)} strokes
+              {Object.values(holes).slice(0, 9).reduce((sum, hole) => sum + (hole?.strokes ?? 0), 0)} strokes
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -206,7 +214,7 @@ export const SinglePanelInput: React.FC = () => {
           <CardTitle className="text-lg flex items-center justify-between">
             <span>Back Nine (10-18)</span>
             <Badge variant="outline" className="text-xs">
-              {Object.values(holes).slice(9, 18).reduce((sum, hole) => sum + hole.strokes, 0)} strokes
+              {Object.values(holes).slice(9, 18).reduce((sum, hole) => sum + (hole?.strokes ?? 0), 0)} strokes
             </Badge>
           </CardTitle>
         </CardHeader>

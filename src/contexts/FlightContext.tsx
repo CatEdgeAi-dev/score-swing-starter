@@ -347,23 +347,28 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         });
 
-      const players: Player[] = await Promise.all(playerPromises).then(list => list.map(p => ({
-        id: p.id as string,
-        name: p.name as string,
-        isRegistered: Boolean((p as any).userId),
-        userId: (p as any).userId as string | undefined,
-        handicap: typeof (p as any).handicap === 'number' ? (p as any).handicap as number : undefined,
-      })))
+      const players: Player[] = await Promise.all(playerPromises).then(list => list.map((p: any) => {
+        const base = {
+          id: String(p.id),
+          name: String(p.name),
+          isRegistered: Boolean(p.userId)
+        } as Player
+        return {
+          ...base,
+          ...(p.userId ? { userId: String(p.userId) } : {}),
+          ...(typeof p.handicap === 'number' ? { handicap: p.handicap as number } : {}),
+        } as Player
+      }))
 
       const flight: Flight = {
-        id: flightData.id,
-        name: flightData.name,
-        courseName: flightData.course_name,
-        dateCreated: flightData.created_at,
+        id: String(flightData.id),
+        name: String(flightData.name),
+        courseName: flightData.course_name ?? '',
+        dateCreated: String(flightData.created_at),
         players: players,
-        createdBy: flightData.created_by,
-        weather: flightData.weather,
-        datePlayedInfo: flightData.date_played,
+        createdBy: String(flightData.created_by),
+        weather: flightData.weather ?? undefined,
+        datePlayedInfo: flightData.date_played ?? undefined,
         status: 'handicap_setup'
       };
 
@@ -466,7 +471,7 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           console.log('👑 Transferring ownership to:', nextOwner.name);
           await supabase
             .from('flights')
-            .update({ created_by: nextOwner.userId })
+            .update({ created_by: nextOwner.userId as string })
             .eq('id', currentFlight.id);
         }
       }
@@ -560,18 +565,18 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       const transformedFlights: Flight[] = (flights || []).map(f => ({
-        id: f.id,
-        name: f.name,
-        courseName: f.course_name,
-        dateCreated: f.created_at,
-        createdBy: f.created_by,
+        id: String(f.id),
+        name: String(f.name),
+        courseName: f.course_name ?? '',
+        dateCreated: String(f.created_at),
+        createdBy: String(f.created_by),
         players: (f.flight_players || [])
           .sort((a, b) => a.player_order - b.player_order)
-          .map(fp => ({
-            id: fp.id,
-            name: fp.user_id ? 'Unknown User' : (fp.guest_name || 'Unknown Guest'),
-            isRegistered: !!fp.user_id,
-            userId: fp.user_id || undefined
+          .map((fp: any) => ({
+            id: String(fp.id),
+            name: fp.user_id ? 'Unknown User' : String(fp.guest_name || 'Unknown Guest'),
+            isRegistered: Boolean(fp.user_id),
+            ...(fp.user_id ? { userId: String(fp.user_id) } : {}),
           }))
       }));
 
@@ -614,7 +619,9 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (userFlight?.flights) {
         // Flight exists, load it
-        await loadFlightData(userFlight.flight_id);
+        if (userFlight.flight_id) {
+          await loadFlightData(userFlight.flight_id);
+        }
       } else if (userFlight && !userFlight.flights) {
         // User has flight_players record but flight doesn't exist (orphaned record)
         console.log('Found orphaned flight_players record, cleaning up...');

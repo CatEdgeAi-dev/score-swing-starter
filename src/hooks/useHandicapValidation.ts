@@ -57,11 +57,11 @@ export const useHandicapValidation = ({
       const validationData: ValidationData[] = data.map(v => ({
         validatorUserId: v.validator_user_id,
         validatedUserId: v.validated_user_id,
-        claimedHandicap: v.claimed_handicap,
+        ...(v.claimed_handicap !== null ? { claimedHandicap: v.claimed_handicap as number } : {}),
         validationStatus: v.validation_status as 'pending' | 'approved' | 'questioned',
-        validationNotes: v.validation_notes,
-        createdAt: v.created_at,
-        updatedAt: v.updated_at
+        ...(v.validation_notes !== null ? { validationNotes: v.validation_notes as string } : {}),
+        ...(v.created_at ? { createdAt: v.created_at as string } : {}),
+        ...(v.updated_at ? { updatedAt: v.updated_at as string } : {}),
       }));
 
       setValidations(validationData);

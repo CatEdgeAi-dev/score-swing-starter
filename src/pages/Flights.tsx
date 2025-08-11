@@ -36,7 +36,7 @@ const Flights = () => {
   const currentUser = {
     id: user?.id || '',
     name: getUserName(),
-    email: user?.email
+    ...(user?.email ? { email: user.email } : {}),
   };
 
   const handleCreateFlight = async (flightData: {
