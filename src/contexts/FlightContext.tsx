@@ -661,13 +661,33 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           schema: 'public',
           table: 'flight_players'
         },
-        () => {
-          // Get current flight ID at the time of the event
-          const currentFlightId = currentFlight?.id;
-          if (currentFlightId) {
-            loadFlightData(currentFlightId);
+        (payload) => {
+          try {
+            const eventType = (payload as any).eventType as string;
+            const newRec: any = (payload as any).new;
+            const oldRec: any = (payload as any).old;
+
+            // Auto-load when the current user is invited/added to a flight
+            if (eventType === 'INSERT' && newRec?.user_id && user?.id && newRec.user_id === user.id) {
+              loadFlightData(newRec.flight_id);
+            }
+
+            // If the change affects the current flight, refresh it
+            const affectedFlightId = newRec?.flight_id || oldRec?.flight_id;
+            if (affectedFlightId && currentFlight?.id === affectedFlightId) {
+              loadFlightData(affectedFlightId);
+            }
+
+            // If current user was removed from their current flight, clear local state
+            if (eventType === 'DELETE' && oldRec?.user_id && user?.id && oldRec.user_id === user.id && currentFlight?.id === oldRec.flight_id) {
+              setCurrentFlight(null);
+              setCurrentPlayer(null);
+            }
+          } catch (e) {
+            console.error('Realtime flight_players handler error:', e);
+          } finally {
+            refreshFlights();
           }
-          refreshFlights();
         }
       )
       .subscribe();

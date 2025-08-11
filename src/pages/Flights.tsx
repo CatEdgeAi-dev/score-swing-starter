@@ -19,8 +19,12 @@ const Flights = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isWorkflowModalOpen, setIsWorkflowModalOpen] = useState(false);
 
-  // Open workflow modal only when a flight is created/joined
-  // Remove automatic opening to prevent loops
+  // Auto-open the workflow modal when a flight is loaded (e.g., invited via realtime)
+  useEffect(() => {
+    if (currentFlight && !isWorkflowModalOpen) {
+      setIsWorkflowModalOpen(true);
+    }
+  }, [currentFlight]);
 
   const getUserName = () => {
     if (user?.email) {

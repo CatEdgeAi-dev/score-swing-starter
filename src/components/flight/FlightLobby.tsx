@@ -161,12 +161,12 @@ export const FlightLobby: React.FC<FlightLobbyProps> = ({ onCreateFlight, onJoin
                      )}
                      
                       {isUserInFlight(flight) ? (
-                        <Button 
-                          onClick={() => onJoinFlight?.()}
-                          variant="default"
-                        >
-                          Enter Flight
-                        </Button>
+                         <Button 
+                           onClick={() => handleJoinFlight(flight.id)}
+                           variant="default"
+                         >
+                           Enter Flight
+                         </Button>
                      ) : canJoinFlight(flight) ? (
                        <Button 
                          onClick={() => handleJoinFlight(flight.id)}
