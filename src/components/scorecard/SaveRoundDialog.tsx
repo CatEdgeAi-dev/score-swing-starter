@@ -134,7 +134,7 @@ Shared from Birdie Buddies App`;
             girPercentage={getGIRPercentage()}
             fairwayPercentage={getFairwayPercentage()}
             courseName={courseName || 'Golf Course'}
-            playerName={isFlightMode ? currentPlayer?.name : undefined}
+            playerName={isFlightMode ? (currentPlayer?.name ?? '') : ''}
             onShare={handleShare}
             onNewRound={handleNewRound}
             onGoHome={handleGoHome}

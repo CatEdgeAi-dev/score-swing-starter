@@ -35,7 +35,7 @@ const createEmptyScorecard = (): Record<number, HoleData> => {
       greenInRegulation: false,
       upAndDown: false,
       notes: '',
-      par: defaultPars[i - 1],
+      par: defaultPars[i - 1] ?? 4,
     };
   }
   return holes;
@@ -86,10 +86,13 @@ export const ScorecardProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const updateHole = (holeNumber: number, data: Partial<HoleData>) => {
     const playerId = isFlightMode && currentPlayer ? currentPlayer.id : 'solo';
+    const baseHole: HoleData = holes[holeNumber] ?? {
+      strokes: 0, putts: 0, fairwayHit: false, greenInRegulation: false, upAndDown: false, notes: '', par: defaultPars[holeNumber - 1] ?? 4
+    };
     
-    const updatedHoles = {
+    const updatedHoles: Record<number, HoleData> = {
       ...holes,
-      [holeNumber]: { ...holes[holeNumber], ...data }
+      [holeNumber]: { ...baseHole, ...data }
     };
     
     setHoles(updatedHoles);

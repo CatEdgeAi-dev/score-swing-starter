@@ -12,9 +12,16 @@ interface HoleInputProps {
 
 export const HoleInput: React.FC<HoleInputProps> = ({ holeNumber }) => {
   const { holes, updateHole } = useScorecardContext();
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  const hole = holes[holeNumber];
+  const defaultHole: import('./ScorecardContext').HoleData = {
+    strokes: 0,
+    putts: 0,
+    fairwayHit: false,
+    greenInRegulation: false,
+    upAndDown: false,
+    notes: '',
+    par: 4,
+  };
+  const hole = holes[holeNumber] ?? defaultHole;
 
   const handleStrokesChange = (change: number) => {
     const newStrokes = Math.max(0, hole.strokes + change);

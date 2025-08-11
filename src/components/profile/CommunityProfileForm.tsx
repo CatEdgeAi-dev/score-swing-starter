@@ -84,9 +84,9 @@ export function CommunityProfileForm() {
         ) as CommunityProfile;
         setProfile(sanitized);
         // Set form values
-        Object.keys(sanitized).forEach(key => {
-          // @ts-expect-error dynamic form key mapping
-          setValue(key as keyof CommunityProfile, (sanitized as any)[key]);
+        Object.keys(sanitized).forEach((key) => {
+          const k = key as keyof CommunityProfile;
+          setValue(k, (sanitized as any)[k] as any);
         });
       }
     } catch (error) {
@@ -453,8 +453,8 @@ export function CommunityProfileForm() {
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="competitive_play_interest"
-                checked={watchedValues.competitive_play_interest}
-                onCheckedChange={(checked) => setValue('competitive_play_interest', checked as boolean)}
+                checked={!!watchedValues.competitive_play_interest}
+                onCheckedChange={(checked) => setValue('competitive_play_interest', !!checked)}
               />
               <Label htmlFor="competitive_play_interest">Interested in competitive play</Label>
             </div>
@@ -471,7 +471,7 @@ export function CommunityProfileForm() {
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="profile_visibility">Profile Visibility</Label>
-            <Select value={watchedValues.profile_visibility} onValueChange={(value) => setValue('profile_visibility', value)}>
+            <Select value={watchedValues.profile_visibility ?? ''} onValueChange={(value) => setValue('profile_visibility', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select visibility level" />
               </SelectTrigger>
@@ -487,8 +487,8 @@ export function CommunityProfileForm() {
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="show_handicap"
-                checked={watchedValues.show_handicap}
-                onCheckedChange={(checked) => setValue('show_handicap', checked as boolean)}
+                checked={!!watchedValues.show_handicap}
+                onCheckedChange={(checked) => setValue('show_handicap', !!checked)}
               />
               <Label htmlFor="show_handicap">Show handicap to others</Label>
             </div>
@@ -496,8 +496,8 @@ export function CommunityProfileForm() {
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="show_location"
-                checked={watchedValues.show_location}
-                onCheckedChange={(checked) => setValue('show_location', checked as boolean)}
+                checked={!!watchedValues.show_location}
+                onCheckedChange={(checked) => setValue('show_location', !!checked)}
               />
               <Label htmlFor="show_location">Show location to others</Label>
             </div>
@@ -505,8 +505,8 @@ export function CommunityProfileForm() {
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="show_contact_info"
-                checked={watchedValues.show_contact_info}
-                onCheckedChange={(checked) => setValue('show_contact_info', checked as boolean)}
+                checked={!!watchedValues.show_contact_info}
+                onCheckedChange={(checked) => setValue('show_contact_info', !!checked)}
               />
               <Label htmlFor="show_contact_info">Show contact information to others</Label>
             </div>

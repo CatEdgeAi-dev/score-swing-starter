@@ -154,9 +154,11 @@ export const HandicapWizard: React.FC<HandicapWizardProps> = ({
       for (const pattern of handicapPatterns) {
         const match = text.match(pattern);
         if (match) {
-          const value = parseFloat(match[1]);
+          const arr = match as RegExpMatchArray;
+          const candidate = (arr[1] ?? arr[0] ?? '').toString();
+          const value = parseFloat(candidate);
           // Validate it's a reasonable handicap value
-          if (value >= 0.0 && value <= 54.0) {
+          if (!Number.isNaN(value) && value >= 0.0 && value <= 54.0) {
             extractedValue = value;
             console.log(`Found handicap using pattern: ${pattern}, value: ${value}`);
             break;
@@ -229,7 +231,7 @@ export const HandicapWizard: React.FC<HandicapWizardProps> = ({
 
     const whsError = validateWhsIndex(whsIndex);
     if (whsError) {
-      setErrors({ whsIndex: whsError });
+      setErrors(prev => ({ ...prev, whsIndex: whsError }));
       return;
     }
 
@@ -520,8 +522,9 @@ export const HandicapWizard: React.FC<HandicapWizardProps> = ({
                 placeholder="e.g., 12.3"
                 value={whsIndex}
                 onChange={(e) => {
-                  setWhsIndex(e.target.value);
-                  const error = validateWhsIndex(e.target.value);
+                  const next = e.target.value ?? '';
+                  setWhsIndex(next);
+                  const error = validateWhsIndex(next);
                   setErrors(prev => {
                     const { whsIndex: _omit, ...rest } = prev;
                     return error ? { ...rest, whsIndex: error } : rest;

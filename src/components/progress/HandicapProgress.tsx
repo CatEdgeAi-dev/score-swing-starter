@@ -64,9 +64,9 @@ export const HandicapProgress = ({ userId }: { userId?: string }) => {
 
       // Calculate trend
       if (simulatedData.length >= 2) {
-        const latest = simulatedData[simulatedData.length - 1].handicap;
-        const previous = simulatedData[simulatedData.length - 2].handicap;
-        const diff = latest - previous;
+        const latestEntry = simulatedData[simulatedData.length - 1]!;
+        const previousEntry = simulatedData[simulatedData.length - 2]!;
+        const diff = latestEntry.handicap - previousEntry.handicap;
         
         if (diff < -0.5) setTrend('improving');
         else if (diff > 0.5) setTrend('worsening');
@@ -153,7 +153,10 @@ export const HandicapProgress = ({ userId }: { userId?: string }) => {
                   trend === 'worsening' ? 'text-red-600' : 
                   'text-muted-foreground'
                 }`}>
-                  {(handicapData[handicapData.length - 1].handicap - handicapData[0].handicap).toFixed(1)}
+                  {(
+                    (handicapData[handicapData.length - 1]?.handicap ?? 0) -
+                    (handicapData[0]?.handicap ?? 0)
+                  ).toFixed(1)}
                 </p>
               </div>
             )}

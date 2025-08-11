@@ -17,8 +17,8 @@ interface HandicapSectionProps {
 export const HandicapSection: React.FC<HandicapSectionProps> = ({ userProfile, onUpdate }) => {
   return (
     <HandicapStatusDashboard
-      userProfile={userProfile}
-      onUpdate={onUpdate}
+      {...(userProfile ? { userProfile } : {})}
+      {...(onUpdate ? { onUpdate } : {})}
     />
   );
 };

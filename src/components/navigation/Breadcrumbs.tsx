@@ -52,7 +52,7 @@ export const Breadcrumbs: React.FC = () => {
   breadcrumbItems.push({
     label: 'Rounds',
     path: '/rounds',
-    isLast: false
+    isLast: false as boolean
   });
 
   // Add current page if it's not rounds
@@ -78,8 +78,9 @@ export const Breadcrumbs: React.FC = () => {
       }
     }
   } else {
-    if (breadcrumbItems.length > 0) {
-      breadcrumbItems[0].isLast = true;
+    const firstItem = breadcrumbItems[0];
+    if (firstItem) {
+      firstItem.isLast = true;
     }
   }
 
