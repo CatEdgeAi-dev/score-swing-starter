@@ -6,6 +6,12 @@ import { logger } from '@/utils/logger';
 import { validateFlightCreation, validateFlightDataConsistency, logValidationResults } from '@/utils/flight-data-validator';
 import { handleSupabaseError } from '@/utils/error-handlers';
 
+// Safe date helper to avoid undefined with noUncheckedIndexedAccess
+const safeToday = (): string => {
+  const [d] = new Date().toISOString().split('T');
+  return d ?? '';
+};
+
 // Interfaces
 interface Player {
   id: string;
@@ -558,7 +564,7 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             player_order
           )
         `)
-        .eq('date_played', new Date().toISOString().split('T')[0])
+        .eq('date_played', safeToday())
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -611,7 +617,7 @@ export const FlightProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           )
         `)
         .eq('user_id', uid)
-        .eq('flights.date_played', new Date().toISOString().split('T')[0])
+        .eq('flights.date_played', safeToday())
         .maybeSingle();
 
       if (error) {

@@ -27,8 +27,10 @@ const Flights = () => {
   }, [currentFlight]);
 
   const getUserName = (): string => {
-    if (user?.email) {
-      return user.email.split('@')[0];
+    const email = user?.email;
+    if (typeof email === 'string' && email.length > 0) {
+      const first = email.split('@')[0];
+      return first ?? 'Player';
     }
     return 'Player';
   };
